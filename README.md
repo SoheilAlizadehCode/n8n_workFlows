@@ -1,12 +1,12 @@
-n8n Workflows 🚀
+# n8n Workflows 🚀
 
 A curated collection of practical and production-oriented n8n workflows for business automation, AI-powered processes, data processing, lead generation, monitoring, notifications, and third-party service integrations.
 
 The goal of this repository is to provide ready-to-import n8n workflows that can be adapted and reused in real-world projects.
 
-✨ What You'll Find
+## ✨ What You'll Find
 
-This repository contains workflows covering a wide range of automation use cases:
+### This repository contains workflows covering a wide range of automation use cases:
 
 🤖 AI-powered automation and multi-agent workflows
 
@@ -40,9 +40,9 @@ This repository contains workflows covering a wide range of automation use cases
 
 📁 Workflows
 
-Some of the workflows currently included in this repository:
+### Some of the workflows currently included in this repository:
 
-Workflow	Use Case
+### Workflow	Use Case
 AI Investment Scenario Simulator	AI-powered investment scenario analysis
 Abandoned Checkout Recovery	Recover abandoned checkouts
 Automated Crypto Coin Crash Tracker	Monitor crypto price movements
@@ -68,9 +68,9 @@ Google Forms → Trello	Create Trello cards from form submissions
 
 The repository is continuously evolving, and new workflows may be added over time.
 
-🧩 Requirements
+## 🧩 Requirements
 
-Most workflows require:
+### Most workflows require:
 
 n8n
 
@@ -114,8 +114,8 @@ KSeF
 
 Not every workflow requires all of these services.
 
-🚀 Getting Started
-1. Install n8n
+## 🚀 Getting Started
+### 1. Install n8n
 
 If you don't already have n8n installed, follow the official n8n documentation:
 
@@ -123,11 +123,11 @@ https://docs.n8n.io/
 
 You can run n8n locally, using Docker, or through n8n Cloud.
 
-2. Clone the repository
+### 2. Clone the repository
 git clone https://github.com/SoheilAlizadehCode/n8n_workFlows.git
 cd n8n_workFlows
 
-3. Import a workflow
+### 3. Import a workflow
 
 Open your n8n instance and import the desired .json workflow.
 
@@ -137,7 +137,7 @@ Workflows → Import from File
 
 Then select one of the JSON files from this repository.
 
-4. Configure credentials
+### 4. Configure credentials
 
 After importing a workflow, configure the required credentials and environment-specific settings.
 
@@ -157,7 +157,7 @@ Database connections
 
 Webhook URLs
 
-5. Review before activation
+### 5. Review before activation
 
 Before enabling a workflow in production:
 
@@ -175,7 +175,7 @@ Configure error handling where necessary.
 
 Enable the workflow.
 
-🔐 Security
+## 🔐 Security
 
 Never commit secrets or credentials to this repository.
 
@@ -194,8 +194,8 @@ Use n8n's credential management system or environment variables instead.
 
 If you accidentally expose a credential, revoke and rotate it immediately.
 
-⚠️ Important Notes
-
+## ⚠️ Important Notes
+```
 These workflows are provided as reusable automation examples.
 
 Before using a workflow in production, make sure you understand:
@@ -215,13 +215,13 @@ Privacy and data protection requirements
 Potential costs associated with external APIs
 
 Some workflows depend on third-party services and may require changes if those services modify their APIs.
-
-🛠️ Customization
+```
+## 🛠️ Customization
 
 n8n workflows are highly customizable.
 
 You can modify:
-
+```
 Triggers
 
 API endpoints
@@ -241,10 +241,10 @@ Database connections
 Scheduling
 
 Error handling
-
+```
 Use these workflows as a starting point and adapt them to your own environment and requirements.
 
-🤝 Contributing
+### 🤝 Contributing
 
 Contributions are welcome!
 
@@ -280,7 +280,7 @@ Include required setup information.
 
 Are tested before submission.
 
-📚 Useful Resources
+### 📚 Useful Resources
 
 n8n
 
@@ -288,13 +288,13 @@ n8n Documentation
 
 n8n Community
 
-⭐ Support
+### ⭐ Support
 
 If you find these workflows useful, consider giving the repository a ⭐ on GitHub.
 
 Feel free to open an Issue if you find a bug, have a question, or have an idea for a new workflow.
 
-📄 License
+### 📄 License
 
 Please check the repository's license before using, modifying, or redistributing these workflows.
 

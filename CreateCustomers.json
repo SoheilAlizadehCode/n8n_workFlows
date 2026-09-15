@@ -1,0 +1,149 @@
+{
+  "name": "CreateCustomers",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "46925ca6-d3fa-4a61-b160-20a4eb0e2b31",
+      "name": "Start Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        1616,
+        1952
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1IxiuRiu6XKBkEa1NIUebBWn73jIKUrgE9Sqj4XtQgBk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IxiuRiu6XKBkEa1NIUebBWn73jIKUrgE9Sqj4XtQgBk/edit?usp=drivesdk",
+          "cachedResultName": "Shopify Test Store Data"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 2054184606,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IxiuRiu6XKBkEa1NIUebBWn73jIKUrgE9Sqj4XtQgBk/edit#gid=2054184606",
+          "cachedResultName": "Customers"
+        },
+        "options": {}
+      },
+      "id": "0438cf15-cf55-40b3-9bee-6910f2d93027",
+      "name": "Google Sheet, Fetch Customers",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1984,
+        1952
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SkAShBNUQhwv5Ng9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "endpoint": "https://store99563.myshopify.com/admin/api/2025-04/graphql.json",
+        "query": "=mutation customerCreate($input: CustomerInput!) {\n    customerCreate(input: $input) {\n        userErrors {\n            field\n            message\n        }\n        customer {\n            id\n            email\n            phone\n            taxExempt\n            firstName\n            lastName\n            amountSpent {\n                amount\n                currencyCode\n            }\n            smsMarketingConsent {\n                marketingState\n                marketingOptInLevel\n                consentUpdatedAt\n            }\n        }\n    }\n}",
+        "variables": "={\n    \"input\": {\n        \"email\": \"{{ $json.email }}\",\n        \"phone\": \"{{ $json.mobile_phone }}\",\n        \"firstName\": \"{{ $json.first_name }}\",\n        \"lastName\": \"{{ $json.last_name }}\",\n        \"smsMarketingConsent\": {\n            \"marketingState\": \"SUBSCRIBED\",\n            \"marketingOptInLevel\": \"SINGLE_OPT_IN\"\n        }\n    }\n}"
+      },
+      "id": "1682cdee-6667-4289-9b99-5dd557ab3bb1",
+      "name": "Shopify, CustomerCreate",
+      "type": "n8n-nodes-base.graphql",
+      "position": [
+        2400,
+        1952
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## Shopify Admin API (GraphQL)\n\nShopify's Admin API uses 'Header Auth' with a **key** of X-Shopify-Access-Token and a **value** of your shopify access token which starts with shpat_ .\n\n### How to generate a Shopify Access Token \nTo generate a Shopify Access Token create an app, grant the app the necessary scopes, then generate a token. \n\n#### From inside a store do the following :\n1. click Settings (nav link) \n2. click Apps and sales channels (nav link) \n3. click Develop Apps (button)\n4. click Create App (button)\n5. give the app a name\n6. click configure Admin API Scopes (button)\n7. at a minimum grant read_customers and write_customers scope. Grant additional scopes if you plan on accessing other parts of the API.\n8. click save\n\n#### To generate the token \n1. click install app (button)\n2. click install on the dialog that pops up (button)\n3. click 'reveal token once' (button)\n4. copy the token into a password vault or somewhere secure.\n",
+        "height": 680,
+        "width": 400
+      },
+      "id": "3931fd0b-5d19-41bd-8778-ed3d27798bb5",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2288,
+        2160
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Google Sheet, Fetch Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheet, Fetch Customers": {
+      "main": [
+        [
+          {
+            "node": "Shopify, CustomerCreate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0a2add22-9de7-4bbb-a5f6-974017d22680",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "name": "template",
+      "id": "08TQIJECNM5nFlxk",
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z"
+    },
+    {
+      "name": "trello",
+      "id": "01J19IAeCMbwcFBQ",
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z"
+    },
+    {
+      "name": "shopify",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z"
+    },
+    {
+      "name": "gsheet",
+      "id": "SNNwZxvHOLrlx751",
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z"
+    },
+    {
+      "name": "google-sheet",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z"
+    }
+  ]
+}

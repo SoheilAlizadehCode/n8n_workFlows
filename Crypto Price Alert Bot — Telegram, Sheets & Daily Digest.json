@@ -1,0 +1,1407 @@
+{
+  "name": "Crypto Price Alert Bot — Telegram, Sheets & Daily Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Crypto Price Alert Bot — Telegram, Sheets & Daily Digest\n\n### How it works\n\nThis workflow monitors a configured crypto watchlist on a schedule, fetches CoinGecko market data, evaluates price-change, threshold, and RSI-style alert conditions, then sends Telegram alerts and logs them to Google Sheets. It also sends a separate scheduled daily Telegram digest with current prices and the Fear & Greed Index. A Telegram command listener lets users request an on-demand price lookup with `/price`, while unknown commands receive a help-style reply.\n\n",
+        "height": 384,
+        "width": 480
+      },
+      "id": "a6e7afa7-911c-4e18-bbbb-fe5c1380c9c0",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1776,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Start watchlist cycle\n\nScheduled monitoring begins here, builds the configured crypto watchlist, and feeds each asset into the batch loop for per-asset processing.",
+        "height": 304,
+        "width": 640,
+        "color": 5
+      },
+      "id": "33681ca0-32ba-45fd-855a-1927300b3601",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1184,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch current market data\n\nRequests the latest market data for the active asset from CoinGecko, normalizes it with the watchlist settings, and skips back to the loop if no price data is available.",
+        "height": 320,
+        "width": 640,
+        "color": 5
+      },
+      "id": "4aa521bf-4b2a-423b-9d26-790e70acd1b1",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Load baseline state\n\nLoads stored per-asset state, checks whether the asset is being seen for the first time, and saves an initial baseline price when needed before returning to the loop.",
+        "height": 416,
+        "width": 624,
+        "color": 5
+      },
+      "id": "fc4c4222-64af-4669-97cf-79dd45cc8c6e",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        176,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Calculate alert indicators\n\nFor assets with existing state, this cluster fetches historical data, calculates RSI, and evaluates the configured alert rules against the current market conditions.",
+        "height": 368,
+        "width": 640,
+        "color": 5
+      },
+      "id": "84963821-7d35-4c1b-ba0b-f28db7a1c179",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        576,
+        512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Apply alert gating\n\nDecides whether an alert should be sent, enforces the cooldown window, and saves the latest price without sending an alert when conditions fail or cooldown has not passed.",
+        "height": 512,
+        "width": 656,
+        "color": 5
+      },
+      "id": "1d2b2aeb-d7ee-4c00-bac7-8b3d88803a38",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Send and record alert\n\nFormats the Telegram alert, sends it, logs the event to Google Sheets, updates persistent alert state, and then returns control to the asset loop.",
+        "height": 304,
+        "width": 864,
+        "color": 5
+      },
+      "id": "1c5d7059-5cb8-4753-bc7f-004c26b9efc9",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1936,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Start daily digest\n\nA separate scheduled lane starts the daily summary and loads configuration for the digest asset list and message settings.",
+        "height": 320,
+        "width": 416,
+        "color": 5
+      },
+      "id": "7e6ca873-a33b-43c7-9d34-9abd62737d26",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Collect digest inputs\n\nFetches bulk current prices for the digest and enriches the summary with the latest Fear & Greed Index value.",
+        "height": 320,
+        "width": 416,
+        "color": 5
+      },
+      "id": "358985a7-f233-4c29-b947-bb46ff0be3c9",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -784,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Send daily summary\n\nCompiles the fetched market and sentiment data into a human-readable digest and sends it to Telegram.",
+        "height": 320,
+        "width": 416,
+        "color": 5
+      },
+      "id": "eb7b3049-9efa-4625-9cea-1477e5fc13f5",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -336,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Receive Telegram command\n\nListens for incoming Telegram messages and parses the command text, including resolving supported ticker aliases to CoinGecko IDs.",
+        "height": 320,
+        "width": 416,
+        "color": 5
+      },
+      "id": "06b95321-fad0-4afa-b568-db3e9b3b565e",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1264,
+        2224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Route command response\n\nChecks whether the parsed message is a supported `/price` command and sends an unknown-command reply for unsupported input.",
+        "height": 480,
+        "width": 416,
+        "color": 5
+      },
+      "id": "2a8e7bba-084f-45d6-a81d-7afd28c7d6b2",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        2224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Reply with price\n\nFetches the requested asset price, formats a Telegram-friendly response, and sends the on-demand price reply.",
+        "height": 304,
+        "width": 640,
+        "color": 5
+      },
+      "id": "38875090-a8e5-4ba7-a1ea-efd8b6a00dc8",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -368,
+        2256
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "abbf7cf4-b9e1-4621-bc97-0d555518e28c",
+      "name": "Hourly Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1136,
+        368
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// ════════════════════════════════════════════════════════\n// ⚙️  CRYPTO PRICE ALERT BOT — ALL CONFIGURATION HERE\n// ════════════════════════════════════════════════════════\n// This is the ONLY node you need to edit to get started.\n// ════════════════════════════════════════════════════════\n\n// ── STEP 1: Telegram Chat ID ─────────────────────────────\n// Message @userinfobot on Telegram to get your Chat ID.\nconst TELEGRAM_CHAT_ID = 'YOUR_TELEGRAM_CHAT_ID_HERE';\n\n// ── STEP 2: Google Sheets ID (optional) ──────────────────\n// Create a Google Sheet and paste its ID from the URL:\n// https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit\n// Leave as placeholder to disable Sheets logging.\nconst GOOGLE_SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';\n\n// ── STEP 3: Your Crypto Watchlist ────────────────────────\n// Add or remove assets. Find CoinGecko IDs at:\n// https://api.coingecko.com/api/v3/coins/list\nconst watchlist = [\n  {\n    symbol: 'bitcoin',        // CoinGecko coin ID (must be lowercase)\n    display: 'BTC',           // Short label shown in Telegram alerts\n    threshold: 75000,         // USD price that triggers the alert\n    direction: 'below',       // 'above' or 'below'\n    cooldownMinutes: 60,      // Minimum minutes between repeated alerts\n    holdings: 0,              // Coins you own — set 0 to disable portfolio tracking\n    priceChangePct: 5,        // Alert if price moves ±5% since last check (0 = off)\n    useRSI: true,             // true = enable 14-period RSI confirmation filter\n    rsiOversold: 30,          // RSI below this is oversold (used as filter)\n    rsiOverbought: 70         // RSI above this is overbought (used as filter)\n  },\n  {\n    symbol: 'ethereum',\n    display: 'ETH',\n    threshold: 2000,\n    direction: 'above',\n    cooldownMinutes: 30,\n    holdings: 0,\n    priceChangePct: 5,\n    useRSI: true,\n    rsiOversold: 30,\n    rsiOverbought: 70\n  },\n  {\n    symbol: 'solana',\n    display: 'SOL',\n    threshold: 90,\n    direction: 'below',\n    cooldownMinutes: 60,\n    holdings: 0,\n    priceChangePct: 10,\n    useRSI: false,\n    rsiOversold: 30,\n    rsiOverbought: 70\n  }\n];\n\n// ── Internal: pass config fields to each item ────────────\nreturn watchlist.map(asset => ({\n  json: {\n    ...asset,\n    telegramChatId: TELEGRAM_CHAT_ID,\n    googleSheetId: GOOGLE_SHEET_ID\n  }\n}));"
+      },
+      "id": "7fc5e316-b6ac-4a39-ae7c-843a624d0fd1",
+      "name": "Configure Watchlist",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -912,
+        368
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d4ef4b44-240a-43ee-b7f5-b0653aa093db",
+      "name": "Loop Over Assets",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        -688,
+        368
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "url": "https://api.coingecko.com/api/v3/simple/price",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "vs_currencies",
+              "value": "usd"
+            },
+            {
+              "name": "include_24hr_change",
+              "value": "true"
+            },
+            {
+              "name": "include_24hr_vol",
+              "value": "true"
+            },
+            {
+              "name": "include_market_cap",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "2393994b-3b80-442b-b98e-73684bd92ab5",
+      "name": "Fetch Crypto Prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "maxTries": 3,
+      "position": [
+        -448,
+        384
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge asset config (from Loop Assets) with the CoinGecko API response.\n// Handles API errors gracefully and computes portfolio value.\nconst assetConfig = $('Loop Over Assets').first().json;\nconst apiResponse = $input.first().json;\nconst symbol = assetConfig.symbol;\n\n// Guard: empty or failed API response\nif (!apiResponse || typeof apiResponse !== 'object' || Object.keys(apiResponse).length === 0) {\n  return [{ json: {\n    symbol,\n    display: assetConfig.display,\n    hasError: true,\n    errorMessage: `CoinGecko returned empty response for '${symbol}'. Check rate limits or coin ID.`\n  }}];\n}\n\nconst coinData = apiResponse[symbol];\n\n// Guard: symbol not found in response\nif (!coinData || typeof coinData.usd === 'undefined') {\n  return [{ json: {\n    symbol,\n    display: assetConfig.display,\n    hasError: true,\n    errorMessage: `Symbol '${symbol}' not found on CoinGecko. Verify the coin ID.`\n  }}];\n}\n\nconst currentPrice = Number(coinData.usd);\nconst holdings = Number(assetConfig.holdings || 0);\nconst portfolioValue = holdings > 0\n  ? parseFloat((currentPrice * holdings).toFixed(2))\n  : null;\n\nreturn [{ json: {\n  // Asset identity\n  symbol: assetConfig.symbol,\n  display: assetConfig.display,\n  chartUrl: `https://www.coingecko.com/en/coins/${assetConfig.symbol}`,\n  // Alert configuration\n  threshold: Number(assetConfig.threshold),\n  direction: assetConfig.direction,\n  cooldownMinutes: Number(assetConfig.cooldownMinutes),\n  priceChangePct: Number(assetConfig.priceChangePct || 0),\n  useRSI: Boolean(assetConfig.useRSI),\n  rsiOversold: Number(assetConfig.rsiOversold || 30),\n  rsiOverbought: Number(assetConfig.rsiOverbought || 70),\n  // Portfolio\n  holdings,\n  portfolioValue,\n  // Credentials / config pass-through\n  telegramChatId: assetConfig.telegramChatId,\n  googleSheetId: assetConfig.googleSheetId,\n  // Live market data\n  currentPrice,\n  change24h: parseFloat(Number(coinData.usd_24h_change || 0).toFixed(2)),\n  volume24h: Number(coinData.usd_24h_vol || 0),\n  marketCap: Number(coinData.usd_market_cap || 0),\n  // Metadata\n  currentTimestamp: Date.now(),\n  hasError: false\n}}];"
+      },
+      "id": "a3f7fd0e-cf82-4594-a2dc-92785526b66c",
+      "name": "Merge Market Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -224,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-hasprice",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.hasError }}",
+              "rightValue": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "570dc8d4-5b09-478e-a72c-0168845ed18f",
+      "name": "If Price Data Exists",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        0,
+        384
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Load per-asset persistent state from workflow static data.\n// Static data survives between executions when the workflow is activated.\nconst staticData = $getWorkflowStaticData('global');\nconst item = $input.first().json;\nconst { symbol } = item;\n\n// Initialise top-level store if first-ever execution\nif (!staticData.assets) staticData.assets = {};\n\n// Initialise per-asset state if this coin was never seen before\nif (!staticData.assets[symbol]) {\n  staticData.assets[symbol] = {\n    lastPrice: null,\n    lastAlertAt: null,\n    avgVolume: null,\n    volumeHistory: []\n  };\n}\n\nconst assetState = staticData.assets[symbol];\nconst nowTimestamp = Date.now();\n\nreturn [{ json: {\n  ...item,\n  lastPrice: assetState.lastPrice,\n  lastAlertAt: assetState.lastAlertAt,\n  avgVolume: assetState.avgVolume || null,\n  nowTimestamp,\n  isFirstRun: assetState.lastPrice === null\n}}];"
+      },
+      "id": "ab9ab0d7-a8c4-492a-b8ac-8da36d328140",
+      "name": "Load Asset State",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        368
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-firstrun",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.isFirstRun }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9088f866-2f87-4d92-8130-cab51a2471c5",
+      "name": "If First Time Running",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        432,
+        368
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// First run for this asset — store the baseline price so future cycles\n// can detect changes. No alert is sent on the first run.\nconst staticData = $getWorkflowStaticData('global');\nconst item = $input.first().json;\nif (!staticData.assets) staticData.assets = {};\nstaticData.assets[item.symbol] = {\n  lastPrice: item.currentPrice,\n  lastAlertAt: null,\n  avgVolume: null,\n  volumeHistory: []\n};\nreturn [{ json: item }];"
+      },
+      "id": "a74d62aa-113b-49d6-ba58-49093d76ded9",
+      "name": "Store Initial Price",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        656,
+        272
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.coingecko.com/api/v3/coins/' + $json.symbol + '/market_chart' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "vs_currency",
+              "value": "usd"
+            },
+            {
+              "name": "days",
+              "value": "15"
+            },
+            {
+              "name": "interval",
+              "value": "daily"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "df5ac300-2ea4-44ac-a360-9d8c3a220281",
+      "name": "Fetch RSI Values",
+      "type": "n8n-nodes-base.httpRequest",
+      "maxTries": 2,
+      "position": [
+        624,
+        720
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate 14-period RSI using Wilder's Smoothing Method.\n// Uses CoinGecko daily close prices from the /market_chart endpoint.\n// Falls back gracefully if data is unavailable or useRSI is false.\nconst assetData = $('Load Asset State').first().json;\nconst marketChart = $input.first().json;\n\nfunction calculateRSI(prices, period) {\n  if (!prices || prices.length < period + 1) return null;\n  let gains = 0, losses = 0;\n  // Initial average over first `period` changes\n  for (let i = 1; i <= period; i++) {\n    const diff = prices[i] - prices[i - 1];\n    if (diff >= 0) gains += diff; else losses += Math.abs(diff);\n  }\n  let avgGain = gains / period;\n  let avgLoss = losses / period;\n  // Wilder's smoothing for remaining periods\n  for (let i = period + 1; i < prices.length; i++) {\n    const diff = prices[i] - prices[i - 1];\n    const g = diff >= 0 ? diff : 0;\n    const l = diff < 0 ? Math.abs(diff) : 0;\n    avgGain = (avgGain * (period - 1) + g) / period;\n    avgLoss = (avgLoss * (period - 1) + l) / period;\n  }\n  if (avgLoss === 0) return 100;\n  return parseFloat((100 - (100 / (1 + avgGain / avgLoss))).toFixed(2));\n}\n\nlet rsi = null;\nlet rsiLabel = 'N/A';\n\nif (assetData.useRSI && marketChart && Array.isArray(marketChart.prices) && marketChart.prices.length > 0) {\n  const closes = marketChart.prices.map(p => p[1]);\n  rsi = calculateRSI(closes, 14);\n  if (rsi !== null) {\n    rsiLabel = rsi > 70 ? '🔴 Overbought' : rsi < 30 ? '🟢 Oversold' : '⚪ Neutral';\n  }\n}\n\nreturn [{ json: { ...assetData, rsi, rsiLabel } }];"
+      },
+      "id": "a07526bf-62e7-4b18-a180-6ecd8aef3859",
+      "name": "Compute RSI",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        848,
+        720
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Evaluate all three alert condition types and produce a decision.\n// Returns shouldAlert (bool) and triggerReasons (string array).\nconst item = $input.first().json;\nconst {\n  currentPrice, lastPrice, threshold, direction,\n  priceChangePct, rsi, rsiOversold, rsiOverbought,\n  useRSI, volume24h, avgVolume\n} = item;\n\nconst triggerReasons = [];\n\n// ── Condition 1: Fixed Price Threshold ─────────────────────\nconst thresholdMet =\n  (direction === 'above' && currentPrice > threshold) ||\n  (direction === 'below' && currentPrice < threshold);\nif (thresholdMet) {\n  const dir = direction === 'above' ? 'Above 📈' : 'Below 📉';\n  triggerReasons.push(`Price ${dir} $${threshold.toLocaleString('en-US')}`);\n}\n\n// ── Condition 2: Price % Change Since Last Check ───────────\nlet pctChangeMet = false;\nif (priceChangePct > 0 && lastPrice && lastPrice > 0) {\n  const actualPct = Math.abs((currentPrice - lastPrice) / lastPrice * 100);\n  if (actualPct >= priceChangePct) {\n    pctChangeMet = true;\n    const signedPct = ((currentPrice - lastPrice) / lastPrice * 100).toFixed(2);\n    const emoji = currentPrice > lastPrice ? '📈' : '📉';\n    triggerReasons.push(`${emoji} Price moved ${signedPct}% (trigger: ±${priceChangePct}%)`);\n  }\n}\n\n// ── Condition 3: Volume Spike (≥2× rolling 7-period average) ─\nlet volumeSpikeMet = false;\nif (avgVolume && avgVolume > 0 && volume24h > 0) {\n  const ratio = volume24h / avgVolume;\n  if (ratio >= 2) {\n    volumeSpikeMet = true;\n    triggerReasons.push(`🔊 Volume spike: ${ratio.toFixed(1)}× average`);\n  }\n}\n\n// ── RSI Filter: suppress alerts at extremes ─────────────────\n// RSI is a FILTER, not a trigger. It prevents chasing extremes.\nlet rsiConfirms = true;\nif (useRSI && rsi !== null) {\n  if (direction === 'above' && rsi > rsiOverbought) rsiConfirms = false; // overbought, don't chase\n  if (direction === 'below' && rsi < rsiOversold)   rsiConfirms = false; // oversold, don't short\n}\n\nconst shouldAlert =\n  thresholdMet ||\n  volumeSpikeMet ||\n  (pctChangeMet && rsiConfirms);\n\nconst priceChangeFromLast = (lastPrice && lastPrice > 0)\n  ? parseFloat(((currentPrice - lastPrice) / lastPrice * 100).toFixed(2))\n  : null;\n\nreturn [{ json: {\n  ...item,\n  shouldAlert,\n  triggerReasons,\n  triggerReasonsStr: triggerReasons.join(' | '),\n  rsiConfirms,\n  priceChangeFromLast\n}}];"
+      },
+      "id": "67c913ca-2337-4e8f-b0ae-9a1297dc209c",
+      "name": "Check Alert Conditions",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1072,
+        720
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-shouldalert",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.shouldAlert }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6a6fc4ba-9bf2-4231-9b0f-c0aa847c4787",
+      "name": "If Alert Needed",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1296,
+        480
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-cooldown",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.lastAlertAt === null || (($json.nowTimestamp - $json.lastAlertAt) > ($json.cooldownMinutes * 60 * 1000)) }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "682979c8-6449-445f-9fd8-a935709108e2",
+      "name": "If Alert Cooldown Over",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1520,
+        480
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build a rich, human-readable Telegram alert message using Markdown.\n// Conditionally includes RSI, portfolio value, and % change sections.\nconst item = $input.first().json;\n\nconst fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\nconst changeSign = item.change24h >= 0 ? '+' : '';\nconst changeEmoji = item.change24h >= 0 ? '📈' : '📉';\nconst alertDate = new Date(item.nowTimestamp).toUTCString();\n\nconst lines = [\n  `🚨 *${item.display} Alert Triggered!*`,\n  ``,\n  `💰 *Current Price:* $${fmt(item.currentPrice)}`,\n  `${changeEmoji} *24h Change:* ${changeSign}${item.change24h}%`,\n];\n\n// Price change since last check (if available)\nif (item.priceChangeFromLast !== null) {\n  const s = item.priceChangeFromLast >= 0 ? '+' : '';\n  lines.push(`📊 *Change Since Last Check:* ${s}${item.priceChangeFromLast}%`);\n}\n\n// RSI reading (if RSI filter is enabled)\nif (item.useRSI && item.rsi !== null) {\n  lines.push(`📐 *RSI (14):* ${item.rsi} — ${item.rsiLabel}`);\n}\n\n// Portfolio value (if holdings are configured)\nif (item.portfolioValue !== null) {\n  lines.push(`💼 *Portfolio Value:* $${fmt(item.portfolioValue)} (${item.holdings} ${item.display})`);\n}\n\n// Trigger reason breakdown\nlines.push(``, `🎯 *Triggered By:*`);\n(item.triggerReasons || []).forEach(r => lines.push(`  • ${r}`));\n\n// RSI override notice\nif (!item.rsiConfirms) {\n  lines.push(``, `⚠️ _RSI filter was overridden — multiple conditions met_`);\n}\n\nlines.push(``, `📊 [View Chart on CoinGecko](${item.chartUrl})`);\n\nreturn [{ json: { ...item, alertMessage: lines.join('\\n'), alertDate } }];"
+      },
+      "id": "9d3b9997-b8ef-430c-93e0-02998b167fcf",
+      "name": "Create Alert Message",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1984,
+        480
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramChatId }}",
+        "text": "={{ $json.alertMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "5ef3e7eb-87cd-4aac-a0a6-4aeb29ebcafd",
+      "name": "Send Alert on Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2208,
+        480
+      ],
+      "webhookId": "d5842bed-bd27-4bcb-a8f3-fa7bd9a05a1c",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.googleSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "gid",
+          "value": "gid=0"
+        },
+        "columns": {
+          "value": {
+            "RSI": "={{ $json.rsi || '' }}",
+            "Date": "={{ $json.alertDate }}",
+            "Symbol": "={{ $json.symbol }}",
+            "Display": "={{ $json.display }}",
+            "Price ($)": "={{ $json.currentPrice }}",
+            "Threshold ($)": "={{ $json.threshold }}",
+            "24h Change (%)": "={{ $json.change24h }}",
+            "Alert Triggers": "={{ $json.triggerReasonsStr }}",
+            "Portfolio Value ($)": "={{ $json.portfolioValue || '' }}"
+          },
+          "schema": [
+            {
+              "id": "Date",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Symbol",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Symbol",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Display",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Display",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price ($)",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Price ($)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "24h Change (%)",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "24h Change (%)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Alert Triggers",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Alert Triggers",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Threshold ($)",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Threshold ($)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Portfolio Value ($)",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Portfolio Value ($)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RSI",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "RSI",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "017c4bf7-bce6-4d8e-9021-35342e881d11",
+      "name": "Append Alert to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2432,
+        480
+      ],
+      "typeVersion": 4.5,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save state after a successful alert.\n// Updates BOTH lastPrice AND lastAlertAt (starts the cooldown timer).\n// Also maintains a rolling 7-period volume history for spike detection.\nconst staticData = $getWorkflowStaticData('global');\nconst item = $input.first().json;\nif (!staticData.assets) staticData.assets = {};\n\nconst existing = staticData.assets[item.symbol] || {};\nconst volumeHistory = existing.volumeHistory ? [...existing.volumeHistory] : [];\nif (item.volume24h > 0) {\n  volumeHistory.push(item.volume24h);\n  if (volumeHistory.length > 7) volumeHistory.shift(); // keep last 7 only\n}\nconst avgVolume = volumeHistory.length > 0\n  ? volumeHistory.reduce((a, b) => a + b, 0) / volumeHistory.length\n  : null;\n\nstaticData.assets[item.symbol] = {\n  lastPrice: item.currentPrice,\n  lastAlertAt: item.nowTimestamp,  // ← this starts the cooldown\n  avgVolume,\n  volumeHistory\n};\n\nreturn [{ json: item }];"
+      },
+      "id": "2ccfebb9-1730-4d66-860f-33aad804b2ce",
+      "name": "Save Alert Status",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2656,
+        480
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save the latest price WITHOUT resetting the cooldown timer.\n// Used when: no condition was met, or the cooldown hasn't expired yet.\n// Also updates the rolling volume history for spike detection.\nconst staticData = $getWorkflowStaticData('global');\nconst item = $input.first().json;\nif (!staticData.assets) staticData.assets = {};\n\nconst existing = staticData.assets[item.symbol] || {};\nconst volumeHistory = existing.volumeHistory ? [...existing.volumeHistory] : [];\nif (item.volume24h > 0) {\n  volumeHistory.push(item.volume24h);\n  if (volumeHistory.length > 7) volumeHistory.shift();\n}\nconst avgVolume = volumeHistory.length > 0\n  ? volumeHistory.reduce((a, b) => a + b, 0) / volumeHistory.length\n  : null;\n\nstaticData.assets[item.symbol] = {\n  lastPrice: item.currentPrice,\n  lastAlertAt: existing.lastAlertAt || null,  // ← preserved, not reset\n  avgVolume,\n  volumeHistory\n};\n\nreturn [{ json: item }];"
+      },
+      "id": "12d29c4f-0629-4fd9-9544-40fcf16a0fdc",
+      "name": "Log Price Without Alert",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1760,
+        672
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "56abf93a-c155-4e9e-9830-6f812ea436d9",
+      "name": "Daily 8am Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1184,
+        1600
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Daily Digest Configuration ─────────────────────────────\n// Keep this watchlist in sync with the main Watchlist Config node.\n// Only symbol, display, and holdings are needed here.\n\nconst TELEGRAM_CHAT_ID = 'YOUR_TELEGRAM_CHAT_ID_HERE';\n\nconst watchlist = [\n  { symbol: 'bitcoin',  display: 'BTC', holdings: 0 },\n  { symbol: 'ethereum', display: 'ETH', holdings: 0 },\n  { symbol: 'solana',   display: 'SOL', holdings: 0 }\n];\n\nconst allSymbols = watchlist.map(a => a.symbol).join(',');\n\nreturn [{ json: { allSymbols, watchlist, telegramChatId: TELEGRAM_CHAT_ID } }];"
+      },
+      "id": "da46e5c7-b019-468d-8ebf-19d721998e96",
+      "name": "Configure Daily Digest",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -960,
+        1600
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "https://api.coingecko.com/api/v3/simple/price",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "={{ $json.allSymbols }}"
+            },
+            {
+              "name": "vs_currencies",
+              "value": "usd"
+            },
+            {
+              "name": "include_24hr_change",
+              "value": "true"
+            },
+            {
+              "name": "include_market_cap",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "cb873e41-7f75-4724-8dc8-055000887e9c",
+      "name": "Retrieve All Crypto Prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -736,
+        1600
+      ],
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.alternative.me/fng/?limit=1",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "bad1396f-fd52-4fe0-8ce1-3c74d32259eb",
+      "name": "Get Fear & Greed Index",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -512,
+        1600
+      ],
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compile the daily digest message from bulk price data and Fear & Greed index.\n// Gracefully handles unavailable Fear & Greed data.\nconst digestConfig = $('Configure Daily Digest').first().json;\nconst pricesData = $('Retrieve All Crypto Prices').first().json;\nconst fngResponse = $input.first().json;\n\nconst fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\nconst dateStr = new Date().toUTCString().replace(' GMT', ' UTC');\n\n// Fear & Greed block (optional — fails silently if API is down)\nlet fngLine = '';\ntry {\n  if (fngResponse && fngResponse.data && fngResponse.data[0]) {\n    const v = Number(fngResponse.data[0].value);\n    const label =\n      v < 25 ? '😱 Extreme Fear' :\n      v < 45 ? '😨 Fear' :\n      v < 55 ? '😐 Neutral' :\n      v < 75 ? '😄 Greed' :\n               '🤑 Extreme Greed';\n    fngLine = `\\n📊 *Fear & Greed:* ${v}/100 — ${label}`;\n  }\n} catch (_) {}\n\nconst lines = [\n  `📅 *Daily Crypto Summary*`,\n  `_${dateStr}_`,\n  fngLine,\n  ``,\n  `━━━━━━━━━━━━━━━━━`\n];\n\nlet totalPortfolio = 0;\n\nfor (const asset of digestConfig.watchlist) {\n  const coin = pricesData && pricesData[asset.symbol];\n  if (!coin) { lines.push(`• *${asset.display}* — data unavailable`); continue; }\n  const price = Number(coin.usd);\n  const chg = parseFloat(Number(coin.usd_24h_change || 0).toFixed(2));\n  const sign = chg >= 0 ? '+' : '';\n  const emoji = chg >= 0 ? '📈' : '📉';\n  const portfolioStr = asset.holdings > 0 ? ` | 💼 $${fmt(price * asset.holdings)}` : '';\n  if (asset.holdings > 0) totalPortfolio += price * asset.holdings;\n  lines.push(`${emoji} *${asset.display}:* $${fmt(price)} (${sign}${chg}%)${portfolioStr}`);\n}\n\nlines.push(`━━━━━━━━━━━━━━━━━`);\nif (totalPortfolio > 0) {\n  lines.push(`💰 *Total Portfolio:* $${fmt(totalPortfolio)}`, ``);\n}\nlines.push(`🤖 _Crypto Price Alert Bot_`);\n\nreturn [{ json: {\n  telegramChatId: digestConfig.telegramChatId,\n  digestMessage: lines.join('\\n')\n}}];"
+      },
+      "id": "7ec75cd1-338d-4627-9022-b38915634ba6",
+      "name": "Build Daily Digest Message",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -288,
+        1600
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramChatId }}",
+        "text": "={{ $json.digestMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "e614ffd4-50ae-4b77-b760-10e20c0cf5dd",
+      "name": "Send Digest on Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -64,
+        1600
+      ],
+      "webhookId": "c915b94b-7574-4af2-9592-3cb7e4cd71be",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "076cac4b-29e1-4f76-8848-d362776b3bf3",
+      "name": "When Telegram Command Received",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -1216,
+        2384
+      ],
+      "webhookId": "crypto-bot-command-webhook",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming Telegram message and resolve ticker aliases to CoinGecko IDs.\n// Handles commands in formats: /price, /price@botname, /price btc, /price bitcoin\nconst msg = $input.first().json.message;\n\nif (!msg || !msg.text) {\n  return [{ json: { commandType: 'unknown', symbol: '', chatId: String(msg?.chat?.id || ''), displayArg: '' } }];\n}\n\nconst raw = (msg.text || '').trim().toLowerCase();\nconst chatId = String(msg.chat.id);\nconst parts = raw.split(/\\s+/);\nconst cmdRaw = parts[0].replace(/^\\//, '').split('@')[0]; // strip / and @botname\nconst arg = (parts[1] || '').trim();\n\n// Ticker alias → CoinGecko coin ID mapping\nconst aliases = {\n  btc: 'bitcoin', eth: 'ethereum', sol: 'solana',\n  ada: 'cardano', dot: 'polkadot', matic: 'matic-network',\n  avax: 'avalanche-2', link: 'chainlink', doge: 'dogecoin',\n  xrp: 'ripple', bnb: 'binancecoin', uni: 'uniswap',\n  atom: 'cosmos', ltc: 'litecoin'\n};\n\nconst resolvedSymbol = aliases[arg] || arg;\n\nreturn [{ json: {\n  commandType: cmdRaw,\n  symbol: resolvedSymbol,\n  displayArg: arg.toUpperCase(),\n  chatId,\n  rawText: raw\n}}];"
+      },
+      "id": "f9dd9757-e698-471f-8646-05850dbcf3d7",
+      "name": "Decode Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -992,
+        2384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-cmd-price",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.commandType }}",
+              "rightValue": "price"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2ef00f79-b2d0-4d1d-b623-157226224e4e",
+      "name": "If Command is /price",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -768,
+        2384
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "url": "https://api.coingecko.com/api/v3/simple/price",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "vs_currencies",
+              "value": "usd"
+            },
+            {
+              "name": "include_24hr_change",
+              "value": "true"
+            },
+            {
+              "name": "include_market_cap",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "51e5fdc5-81ea-4317-8fa8-8c369a018272",
+      "name": "Fetch Specific Price",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -320,
+        2384
+      ],
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the price reply for a /price command.\n// Provides a helpful fallback message if the coin ID is not found.\nconst cmdData = $('Decode Telegram Message').first().json;\nconst priceData = $input.first().json;\nconst symbol = cmdData.symbol;\nconst coin = priceData && priceData[symbol];\n\nconst fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nif (!coin || !coin.usd) {\n  return [{ json: {\n    chatId: cmdData.chatId,\n    replyMessage: [\n      `❓ Could not find price for *${cmdData.displayArg || symbol}*.`,\n      ``,\n      `Try the full CoinGecko coin ID:`,\n      `\\`/price bitcoin\\``,\n      ``,\n      `Or browse IDs at: coingecko.com/en/coins`\n    ].join('\\n')\n  }}];\n}\n\nconst price = Number(coin.usd);\nconst chg = parseFloat(Number(coin.usd_24h_change || 0).toFixed(2));\nconst sign = chg >= 0 ? '+' : '';\nconst emoji = chg >= 0 ? '📈' : '📉';\nconst mcapLine = coin.usd_market_cap\n  ? `\\n🏦 *Market Cap:* $${fmt(coin.usd_market_cap)}`\n  : '';\n\nconst msg = [\n  `💰 *${cmdData.displayArg || symbol.toUpperCase()} Live Price*`,\n  ``,\n  `*Price:* $${fmt(price)}`,\n  `${emoji} *24h Change:* ${sign}${chg}%`,\n  mcapLine,\n  ``,\n  `[View on CoinGecko](https://www.coingecko.com/en/coins/${symbol})`\n].join('\\n');\n\nreturn [{ json: { chatId: cmdData.chatId, replyMessage: msg } }];"
+      },
+      "id": "a1f86d30-b738-4846-8517-99a5473714b8",
+      "name": "Create Price Reply Message",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -96,
+        2384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.replyMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "aecbcbad-219c-4ac7-8455-3ba3b7fbd15a",
+      "name": "Send Price Reply on Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        128,
+        2384
+      ],
+      "webhookId": "058c7d1b-364e-4ee8-98df-0a541bdbaf57",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "❓ *Unknown command.*\n\n*Available commands:*\n• `/price <coin>` — Get live price\n\n*Examples:*\n`/price bitcoin`\n`/price btc`\n`/price eth`\n\n*Supported tickers:*\nbtc, eth, sol, ada, dot, matic, avax, link, doge, xrp, bnb, uni, atom, ltc",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "11d0dee0-6613-4227-965a-b1c3c884bb10",
+      "name": "Send Unknown Command Alert",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -544,
+        2544
+      ],
+      "webhookId": "6ceb95bd-e131-4505-bfbd-11274573462f",
+      "typeVersion": 1.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Compute RSI": {
+      "main": [
+        [
+          {
+            "node": "Check Alert Conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hourly Trigger": {
+      "main": [
+        [
+          {
+            "node": "Configure Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Alert Needed": {
+      "main": [
+        [
+          {
+            "node": "If Alert Cooldown Over",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Price Without Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RSI Values": {
+      "main": [
+        [
+          {
+            "node": "Compute RSI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Asset State": {
+      "main": [
+        [
+          {
+            "node": "If First Time Running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Assets": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Crypto Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 8am Trigger": {
+      "main": [
+        [
+          {
+            "node": "Configure Daily Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Market Data": {
+      "main": [
+        [
+          {
+            "node": "If Price Data Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Alert Status": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Watchlist": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Crypto Prices": {
+      "main": [
+        [
+          {
+            "node": "Merge Market Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Initial Price": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Alert Message": {
+      "main": [
+        [
+          {
+            "node": "Send Alert on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Specific Price": {
+      "main": [
+        [
+          {
+            "node": "Create Price Reply Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Command is /price": {
+      "main": [
+        [
+          {
+            "node": "Fetch Specific Price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Unknown Command Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Price Data Exists": {
+      "main": [
+        [
+          {
+            "node": "Load Asset State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If First Time Running": {
+      "main": [
+        [
+          {
+            "node": "Store Initial Price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch RSI Values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Alert to Sheets": {
+      "main": [
+        [
+          {
+            "node": "Save Alert Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Alert Conditions": {
+      "main": [
+        [
+          {
+            "node": "If Alert Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Daily Digest": {
+      "main": [
+        [
+          {
+            "node": "Retrieve All Crypto Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fear & Greed Index": {
+      "main": [
+        [
+          {
+            "node": "Build Daily Digest Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Alert Cooldown Over": {
+      "main": [
+        [
+          {
+            "node": "Create Alert Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Price Without Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert on Telegram": {
+      "main": [
+        [
+          {
+            "node": "Append Alert to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "If Command is /price",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Price Without Alert": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Daily Digest Message": {
+      "main": [
+        [
+          {
+            "node": "Send Digest on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Price Reply Message": {
+      "main": [
+        [
+          {
+            "node": "Send Price Reply on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve All Crypto Prices": {
+      "main": [
+        [
+          {
+            "node": "Get Fear & Greed Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Telegram Command Received": {
+      "main": [
+        [
+          {
+            "node": "Decode Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3dc46832-6607-420c-93ce-b04a90e5cd6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "name": "Template",
+      "id": "TQQNUlAM8h9e8zRY",
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z"
+    }
+  ]
+}

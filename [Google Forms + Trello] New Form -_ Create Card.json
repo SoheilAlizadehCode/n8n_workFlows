@@ -1,0 +1,1139 @@
+{
+  "name": "[Google Forms + Trello] New Form -> Create Card",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### No custom fields\nAll the information will be saved in the description.",
+        "height": 120,
+        "width": 230,
+        "color": 6
+      },
+      "id": "cd5ac702-7835-4013-bd37-7609ab6d72ce",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        1808
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4/edit?usp=drivesdk",
+          "cachedResultName": "Let’s Get to Know You  (Responses)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 928857594,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4/edit#gid=928857594",
+          "cachedResultName": "Form Responses 1"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "d67225d2-b877-4e3b-b2e9-fb535438e956",
+      "name": "New Form Submission",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "position": [
+        880,
+        1792
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "listId": "{your-lis-id}",
+        "name": "={{ $json['What\\'s your name? '] }} | {{ $json['Company Name '] }}",
+        "description": "=Name: {{ $json['What\\'s your name? '] }}\nPhone Number: {{ $json['  Phone Number (Optional)  '] }}\nEmail: {{ $json['Email Address '] }}\nCompany Name: {{ $json['Company Name '] }}\nCompany Size: {{ $json['Company Size '] }}\nNeeds: {{ $json['What specific challenges or goals would you like assistance with?  '] }}",
+        "additionalFields": {
+          "due": "="
+        }
+      },
+      "id": "ed77d056-2bd9-4687-8221-69d14d12f71d",
+      "name": "Create Lead",
+      "type": "n8n-nodes-base.trello",
+      "position": [
+        1088,
+        1792
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4/edit?usp=drivesdk",
+          "cachedResultName": "Let’s Get to Know You  (Responses)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 928857594,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GloF5ZfNu4B4Nre-DxURIxup6KgxntFhiP29Ri1KZe4/edit#gid=928857594",
+          "cachedResultName": "Form Responses 1"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "fd2f2d8b-5be5-4770-a8fd-940060e5eb27",
+      "name": "New Form",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "position": [
+        880,
+        2448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d06ed750-95ea-4cf9-a88a-cc304b9f36e1",
+              "name": "Name",
+              "type": "string",
+              "value": "={{ $json['What\\'s your name? '] }}"
+            },
+            {
+              "id": "40159d86-3860-43e3-aaf8-f00d38eef80d",
+              "name": "EmailAddress ",
+              "type": "string",
+              "value": "={{ $json['Email Address '] }}"
+            },
+            {
+              "id": "a76a5451-2ea3-41fe-a01b-e33d5bb7cc8b",
+              "name": "Company Name ",
+              "type": "string",
+              "value": "={{ $json['Company Name '] }}"
+            },
+            {
+              "id": "82ff6d48-07af-4388-8b0b-e34478d3a54a",
+              "name": "Company Size ",
+              "type": "string",
+              "value": "={{ $json['Company Size '] }}"
+            },
+            {
+              "id": "d25b6843-bc0d-4435-aeaf-1a0735b92d4b",
+              "name": "Needs",
+              "type": "string",
+              "value": "={{ $json['What specific challenges or goals would you like assistance with?  '] }}"
+            },
+            {
+              "id": "819c8103-1d93-4762-a5d0-824d00bb964a",
+              "name": "Lead Source",
+              "type": "string",
+              "value": "={{ $json['How did you find us?'] }}"
+            },
+            {
+              "id": "899e6ecd-8345-4110-bd04-5d96259b1b23",
+              "name": "Company Website",
+              "type": "string",
+              "value": "={{ $json['Company Website'] }}"
+            },
+            {
+              "id": "2235a183-d5b4-4771-8d5c-20fd58cca50e",
+              "name": "Company Industry",
+              "type": "string",
+              "value": "={{ $json['Company Industry'] }}"
+            },
+            {
+              "id": "db55fac8-7ce0-4b45-b1dd-c2c87afb7ef1",
+              "name": "listID",
+              "type": "string",
+              "value": "{your-list-Id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b6548027-e42d-464a-abde-b4b190cc959a",
+      "name": "Set Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1104,
+        2448
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "listId": "={{ $json.listID }}",
+        "name": "={{ $('Set Fields').item.json.Name }} | {{ $('Set Fields').item.json['Company Name '] }}",
+        "description": "={{ $json.Needs }}",
+        "additionalFields": {}
+      },
+      "id": "1c4d484d-513a-4f3d-9b6e-646397267a1e",
+      "name": "Create Card",
+      "type": "n8n-nodes-base.trello",
+      "position": [
+        1328,
+        2448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c760d318-1c95-4b3d-9358-f85d896ace93",
+              "name": "fieldName",
+              "type": "string",
+              "value": "={field-id}"
+            },
+            {
+              "id": "ed4e0e73-7e35-45c3-8e3a-86939e81d0f8",
+              "name": "fieldPhoneNumber",
+              "type": "string",
+              "value": "={field-id}"
+            },
+            {
+              "id": "8b777205-7780-427b-8fc4-943cdccf6bdd",
+              "name": "fieldEmail",
+              "type": "string",
+              "value": "{field-id}"
+            },
+            {
+              "id": "bc3c2afb-9fb8-4b41-8441-619824d3246b",
+              "name": "fieldCompanyName",
+              "type": "string",
+              "value": "{field-id}"
+            },
+            {
+              "id": "12c84651-f05c-4973-98c9-abe8390d18d7",
+              "name": "fieldCompanySize",
+              "type": "string",
+              "value": "{field-id}"
+            },
+            {
+              "id": "c4979307-69d4-4b81-b66b-897603b8a9ae",
+              "name": "fieldCompanyIndustry",
+              "type": "string",
+              "value": "{field-id}"
+            },
+            {
+              "id": "62b45b76-35cf-4404-b21b-1e1808d33b92",
+              "name": "fieldCompanyWebsite",
+              "type": "string",
+              "value": "{field-id}"
+            },
+            {
+              "id": "34f6a8da-e092-4de4-86aa-a2c1217de892",
+              "name": "fieldLeadSource",
+              "type": "string",
+              "value": "{field-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47a162c1-8270-49f4-9f0a-1f6e5149d338",
+      "name": "Set IDs",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1552,
+        2448
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.trello.com/1/cards/{{ $('Create Card').item.json.id }}/customFields",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFieldItems\": [\n    {\n      \"idCustomField\": \"{{ $json.fieldName }}\",\n      \"value\": {\n        \"text\": \"{{ $('Set Fields').item.json.Name }}\"\n      }\n    },\n    {\n      \"idCustomField\": \"{{ $json.fieldPhoneNumber }}\",\n      \"value\": {\n        \"text\": \"{{ $('Set Fields').item.json.PhoneNumber }}\"\n      }\n    },\n    {\n      \"idCustomField\": \"{{ $json.fieldEmail }}\",\n      \"value\": {\n        \"text\": \"{{ $('Set Fields').item.json['EmailAddress '] }}\"\n      }\n    },\n    {\n      \"idCustomField\": \"{{ $json.fieldCompanyName }}\",\n      \"value\": {\n        \"text\": \"{{ $('Set Fields').item.json['Company Name '] }}\"\n      }\n    },\n    {\n      \"idCustomField\": \"{{ $json.fieldCompanyWebsite }}\",\n      \"value\": {\n        \"text\": \"{{ $('Set Fields').item.json['Company Website'] }}\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "7efd6324-b8db-4621-ab51-180245f1783a",
+      "name": "Trello | Update Custom Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1760,
+        2448
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "8c939dc4-a8e1-4322-8ac9-1e1cbdae5c7d",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Company Size '] }}",
+                    "rightValue": "Solo (1)"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "abd45fb9-9b3a-4313-83fe-e85727248a30",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Company Size '] }}",
+                    "rightValue": "Small (2–10)"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "6be65ad1-c577-4a39-9b6c-4098db2cff07",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Company Size '] }}",
+                    "rightValue": "Medium (11–50)"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "851baceb-125a-4f58-bbbe-b1f9ae3a2e46",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Company Size '] }}",
+                    "rightValue": "Large (51–200)"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "688d3623-8d21-47fe-be6d-46ee351c4eb3",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Company Size '] }}",
+                    "rightValue": "Enterprise (200+)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "150acedd-d7c9-4284-a472-48fdf031f226",
+      "name": "Options for Company Size",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1984,
+        2416
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "8c939dc4-a8e1-4322-8ac9-1e1cbdae5c7d",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Lead Source'] }}",
+                    "rightValue": "Youtube"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "abd45fb9-9b3a-4313-83fe-e85727248a30",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Lead Source'] }}",
+                    "rightValue": "Facebook/Instagram"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "6be65ad1-c577-4a39-9b6c-4098db2cff07",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Lead Source'] }}",
+                    "rightValue": "Google"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "851baceb-125a-4f58-bbbe-b1f9ae3a2e46",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Set Fields').item.json['Lead Source'] }}",
+                    "rightValue": "Friend/Family"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "49333192-cd21-412b-99a1-b1b69a77c3d1",
+      "name": "Options for Lead Source",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        2640,
+        2432
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sizeOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f2606b8c-c166-4a6d-9466-33b8428100d9",
+      "name": "Solo (1)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        2048
+      ],
+      "typeVersion": 3.4,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sizeOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dbba4d30-0ec3-4902-9c54-3b051b6e926a",
+      "name": "Small (2–10)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        2256
+      ],
+      "typeVersion": 3.4,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sizeOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fe04f4af-e13e-43c5-bdf7-7b38e04c81d8",
+      "name": "Medium (11–50)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        2448
+      ],
+      "typeVersion": 3.4,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sizeOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "49f50449-84ca-49df-88d1-217b4465840e",
+      "name": "Large (51–200)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        2656
+      ],
+      "executeOnce": false,
+      "typeVersion": 3.4,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sizeOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3ab2fbe5-1190-404a-9a77-8ee744db0d42",
+      "name": "Enterprise (200+)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        2848
+      ],
+      "typeVersion": 3.4,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.trello.com/1/cards/{{ $('Create Card').item.json.id }}/customFields",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFieldItems\": [\n    {\n      \"idCustomField\": \"{{ $('Set IDs').item.json.fieldCompanySize }}\",\n      \"idValue\": \"{{ $json.sizeOption }}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "626654fc-eb10-4c26-8f39-597fcc2b4f15",
+      "name": "Trello | Update Company Size",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2464,
+        2448
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sourceOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1b1b0ba9-fc7b-4b5d-ae10-b2c6bf5cd096",
+      "name": "Youtube",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2864,
+        2160
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sourceOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9bc34355-6e53-41ea-a113-ba26d6b16b61",
+      "name": "Facebook/Instagram",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2864,
+        2352
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sourceOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "903a91b9-97f0-4219-b3f5-f1b571ed9d58",
+      "name": "Google",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2864,
+        2560
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228fe67d-9189-4bf8-9e51-fc39fdf9f66c",
+              "name": "sourceOption",
+              "type": "string",
+              "value": "{option-id}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e87bbd3-22b2-4f7b-aed1-c48e8ce71b39",
+      "name": "Friendy/Family",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2864,
+        2752
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.trello.com/1/cards/{{ $('Create Card').item.json.id }}/customFields",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFieldItems\": [\n    {\n      \"idCustomField\": \"{{ $('Set IDs').item.json.fieldLeadSource }}\",\n      \"idValue\": \"{{ $json.sourceOption }}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "f873a4a1-dbaa-4792-84e6-61e1a1c16f85",
+      "name": "Trello| Update Lead Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3104,
+        2448
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "### Custom Fields\nThis workflow will create the card and update the custom fields.",
+        "height": 120,
+        "width": 230,
+        "color": 6
+      },
+      "id": "35ce110f-2ca8-441e-8b9f-4ad32cac65b1",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        2448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.trello.com/1/cards/{{ $('Create Card').item.json.id }}/customFields",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFieldItems\": [\n    {\n      \"idCustomField\": \"{{ $('Set IDs').item.json.fieldCompanyIndustry }}\",\n      \"idValue\": \"{{ $json.trelloIndustryOptionId }}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "cd6b3bb3-6b99-41f8-bb13-4f65d98d1cb6",
+      "name": "Trello| Update Company Industry",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3520,
+        2448
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of items) {\n  const companyIndustry = $('Set Fields').first().json['Company Industry']; \n\n  let trelloIndustryOptionId = null;\n\n  switch (companyIndustry) {\n    case 'Consumer Goods':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Education':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Energy & Utilities':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Entertainment & Media':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Financial Services':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Healthcare & Medical':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Hospitality & Travel':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Information Technology (IT) / Software':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Legal Services':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Marketing & Advertising':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Professional Services / Consulting':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Real Estate':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Retail / E-commerce':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    case 'Other':\n      trelloIndustryOptionId = '{option-id}';\n      break;\n    default:\n      console.warn(`No matching Trello option found for industry: ${companyIndustry}`);\n      break;\n  }\n\n  results.push({\n    json: {\n     \n      companyIndustry: companyIndustry, \n      trelloIndustryOptionId: trelloIndustryOptionId, \n    },\n\n    pairedItem: item.pairedItem,\n  });\n}\n\n\nreturn results;"
+      },
+      "id": "8fd6a822-f9e8-4da2-97b9-e6c629006064",
+      "name": "Options for Company Industry",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3312,
+        2448
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Set Up Steps\nStep 1: Connect to Google Sheets\nSelect the Google Sheets spreadsheet that receives responses from your Google Form. This should be the sheet automatically created when you set up form responses to be collected in a spreadsheet.\n\nStep 2: Configure Card Details\nMap the form response data to create your card:\nCard Name: Select the form field that will serve as the card title.\nCard Description: Choose the form field(s) that will populate the card description.",
+        "height": 400,
+        "width": 700,
+        "color": 7
+      },
+      "id": "31db96ca-76f4-4e78-8a9e-03a152ba35a8",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1568
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google": {
+      "main": [
+        [
+          {
+            "node": "Trello| Update Lead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set IDs": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Custom Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube": {
+      "main": [
+        [
+          {
+            "node": "Trello| Update Lead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Form": {
+      "main": [
+        [
+          {
+            "node": "Set Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Solo (1)": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Card": {
+      "main": [
+        [
+          {
+            "node": "Set IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Friendy/Family": {
+      "main": [
+        [
+          {
+            "node": "Trello| Update Lead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Small (2–10)": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Large (51–200)": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Medium (11–50)": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enterprise (200+)": {
+      "main": [
+        [
+          {
+            "node": "Trello | Update Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook/Instagram": {
+      "main": [
+        [
+          {
+            "node": "Trello| Update Lead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Create Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Options for Lead Source": {
+      "main": [
+        [
+          {
+            "node": "Youtube",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Facebook/Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Friendy/Family",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Options for Company Size": {
+      "main": [
+        [
+          {
+            "node": "Solo (1)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Small (2–10)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medium (11–50)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Large (51–200)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enterprise (200+)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trello| Update Lead Source": {
+      "main": [
+        [
+          {
+            "node": "Options for Company Industry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Options for Company Industry": {
+      "main": [
+        [
+          {
+            "node": "Trello| Update Company Industry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trello | Update Company Size": {
+      "main": [
+        [
+          {
+            "node": "Options for Lead Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trello | Update Custom Fields": {
+      "main": [
+        [
+          {
+            "node": "Options for Company Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6eb14dc2-78da-4a37-a675-82e7553e4c58",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "name": "template",
+      "id": "08TQIJECNM5nFlxk",
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z"
+    },
+    {
+      "name": "trello",
+      "id": "01J19IAeCMbwcFBQ",
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z"
+    }
+  ]
+}

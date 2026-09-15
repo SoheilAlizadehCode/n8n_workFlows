@@ -1,0 +1,618 @@
+{
+  "name": "Crypto News Risk Monitor - RSS + AI Alert + Gmail + Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Crypto News Risk Monitor\n\nKeep an eye on breaking crypto news without watching feeds all day. This workflow polls the CoinDesk RSS feed on a timer, uses an AI model to score each story for market risk, logs everything to Google Sheets, and emails you when something important breaks. It suits traders, analysts, and anyone who wants an early heads up on market moving news.\n\n### How it works\n1. The **RSS** trigger polls CoinDesk on a schedule and passes the latest article forward.\n2. A **Code** node pulls out the title, link, and date, then flags whether the story is crypto relevant.\n3. A **Google Sheets** lookup skips any article that was already handled.\n4. **OpenAI** reads the story and returns a summary, affected coins, a risk level, and a suggested action.\n5. Two Google Sheets tabs store a dedupe record and a full risk log.\n6. **Gmail** sends a formatted alert when the priority is HIGH or MEDIUM.\n\n",
+        "height": 632,
+        "width": 480
+      },
+      "id": "a5e3d78f-2bc2-49df-853a-b746b67a4f75",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1920,
+        1040
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Ingest and filter\nThe RSS trigger polls CoinDesk on a timer. A Code node extracts the article fields, builds a dedupe id, and checks it against a crypto keyword list. The IF node lets only relevant stories continue.",
+        "height": 450,
+        "width": 735,
+        "color": 7
+      },
+      "id": "cc09fcf4-b6b5-4065-b79a-9eef7b53843b",
+      "name": "Section 1 - Ingest and filter",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2432,
+        1248
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Dedupe check\nA Google Sheets lookup reads the Seen Articles tab, and a Code node stops any story that was already handled so nothing is analyzed or emailed twice.",
+        "height": 498,
+        "width": 502,
+        "color": 7
+      },
+      "id": "e53a1b16-d92b-4255-b375-1c1d1f872a4f",
+      "name": "Section 2 - Dedupe check",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3248,
+        1232
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. AI risk analysis\nAn HTTP request sends the story to OpenAI, which returns a summary, affected coins, a risk level, and an action. A Code node parses that reply and sets the final priority.",
+        "height": 482,
+        "width": 614,
+        "color": 7
+      },
+      "id": "4b7a9bd8-9edc-4609-8cc9-bfbd232ef0b1",
+      "name": "Section 3 - AI risk analysis",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3776,
+        1232
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 4. Save and alert\nTwo Google Sheets appends store the dedupe record and the full risk log. An IF node checks the priority, and Gmail emails a formatted alert for HIGH or MEDIUM stories.",
+        "height": 642,
+        "width": 943,
+        "color": 7
+      },
+      "id": "0f28eefe-11a8-4428-ae04-a2da6f626819",
+      "name": "Section 4 - Save and alert",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4432,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "*/10 * * * *"
+            }
+          ]
+        },
+        "feedUrl": "https://www.coindesk.com/arc/outboundfeeds/rss/"
+      },
+      "id": "1a9bf2b1-841b-4def-a227-877dce320c5a",
+      "name": "1. RSS - Poll CoinDesk Every 10 Minutes",
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "position": [
+        2480,
+        1520
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract fields and check crypto keyword relevance\nconst item = $json;\n\nconst title       = (item.title          || '').trim();\nconst description = (item.contentSnippet || item.content || '').trim();\nconst link        = (item.link           || '').trim();\nconst pubDate     = (item.isoDate        || new Date().toISOString());\n\n// Build dedupe ID from URL (last path segment is unique per article)\nconst urlParts  = link.split('/');\nconst articleId = urlParts.filter(Boolean).pop() || title.toLowerCase().replace(/\\s+/g, '-').substring(0, 60);\n\n// Crypto relevance keyword check\nconst text = (title + ' ' + description).toLowerCase();\nconst keywords = [\n  'bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'blockchain',\n  'defi', 'nft', 'altcoin', 'stablecoin', 'solana', 'sol',\n  'regulation', 'sec', 'hack', 'exploit', 'market', 'price',\n  'rally', 'dump', 'crash', 'bull', 'bear', 'whale', 'exchange',\n  'binance', 'coinbase', 'usdt', 'usdc', 'inflation', 'fed'\n];\n\nconst matched = keywords.filter(function(kw) { return text.includes(kw); });\nconst isRelevant = matched.length > 0;\n\nreturn [{\n  json: {\n    title,\n    description: description.substring(0, 500),\n    link,\n    pubDate,\n    articleId,\n    isRelevant,\n    matchedKeywords: matched\n  }\n}];"
+      },
+      "id": "1143bd68-9de0-434c-a898-4d8037b00216",
+      "name": "2. Code - Extract Fields and Check Keywords",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2720,
+        1520
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-relevant",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.isRelevant }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4a95a1ce-5bf9-4cfc-9e6f-bcfd40b5b75a",
+      "name": "3. IF - Is Crypto Relevant?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2960,
+        1520
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_CRYPTO_MONITOR_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Seen Articles"
+        },
+        "options": {}
+      },
+      "id": "a75d6389-a8cb-4b25-af81-8441e0d76b95",
+      "name": "4. Sheets - Check If Already Processed",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3296,
+        1504
+      ],
+      "typeVersion": 4.5,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compare this article's id against the Seen Articles rows\nconst sheetsRows = $input.all();\nconst ctx        = $('2. Code - Extract Fields and Check Keywords').first().json;\n\n// Already processed only if a stored row matches this article id\nconst alreadySeen = sheetsRows.some(function(item) {\n  return String(item.json['Article ID']) === String(ctx.articleId);\n});\n\nif (alreadySeen) {\n  // Stop this item, nothing to analyze or send\n  return [];\n}\n\n// New article, pass context forward\nreturn [{ json: ctx }];"
+      },
+      "id": "7cfa43d7-f406-44d6-9a11-b6b45f1bda6c",
+      "name": "4b. Code - Skip If Already Seen",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3536,
+        1504
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0,\n  \"max_tokens\": 300,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a crypto risk analyst. Analyze the news and return ONLY valid JSON with no markdown. Structure: {\\\"summary\\\": \\\"2 sentences max\\\", \\\"coins\\\": [\\\"BTC\\\"], \\\"risk_level\\\": \\\"HIGH or MEDIUM or LOW\\\", \\\"score\\\": integer 0-100, \\\"action\\\": \\\"what a trader should do right now in one sentence\\\"}. HIGH = major market-moving event. MEDIUM = noteworthy but limited impact. LOW = routine news.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify('Title: ' + $json.title + '\\nDescription: ' + $json.description) }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "id": "2485e7c4-f50f-47e7-ae76-2f3f93c32667",
+      "name": "5. HTTP - OpenAI Crypto Risk Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3872,
+        1504
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI JSON response and compute final priority\nconst gptResp = $json;\nconst ctx     = $('4b. Code - Skip If Already Seen').first().json;\n\nconst raw = gptResp?.choices?.[0]?.message?.content || '';\nif (!raw) throw new Error('OpenAI returned empty response. Check your API key.');\n\nlet ai = {};\ntry {\n  const cleaned = raw.trim()\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/```$/i, '')\n    .trim();\n  ai = JSON.parse(cleaned);\n} catch(e) {\n  ai = {\n    summary:    raw.substring(0, 200),\n    coins:      [],\n    risk_level: 'LOW',\n    score:      20,\n    action:     'No specific action recommended.'\n  };\n}\n\n// Final priority from risk_level\nconst riskLevel = (ai.risk_level || 'LOW').toUpperCase();\nconst priority  = riskLevel === 'HIGH' ? 'HIGH' :\n                  riskLevel === 'MEDIUM' ? 'MEDIUM' : 'LOW';\n\nconst coinsStr = Array.isArray(ai.coins) ? ai.coins.join(', ') : (ai.coins || '');\n\nreturn [{\n  json: {\n    title:     ctx.title,\n    link:      ctx.link,\n    pubDate:   ctx.pubDate,\n    articleId: ctx.articleId,\n    summary:   ai.summary    || '',\n    coins:     coinsStr,\n    riskLevel,\n    score:     parseInt(ai.score) || 50,\n    action:    ai.action     || '',\n    priority,\n    processedAt: new Date().toISOString(),\n    dateOnly:    new Date().toISOString().split('T')[0]\n  }\n}];"
+      },
+      "id": "ed2556b4-547c-466c-970f-95b0efd41652",
+      "name": "6. Code - Parse AI and Set Priority",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4112,
+        1504
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_CRYPTO_MONITOR_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Seen Articles"
+        },
+        "columns": {
+          "value": {
+            "Title": "={{ $json.title }}",
+            "Article ID": "={{ $json.articleId }}",
+            "Processed At": "={{ $json.processedAt }}"
+          },
+          "schema": [
+            {
+              "id": "Article ID",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Article ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processed At",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Processed At",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "1479eef8-98a4-4b31-91d8-d545fa98daf7",
+      "name": "7. Sheets - Save Dedupe Record",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4512,
+        1328
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_CRYPTO_MONITOR_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Risk Log"
+        },
+        "columns": {
+          "value": {
+            "Date": "={{ $json.dateOnly }}",
+            "Link": "={{ $json.link }}",
+            "Coins": "={{ $json.coins }}",
+            "Score": "={{ $json.score }}",
+            "Title": "={{ $json.title }}",
+            "Action": "={{ $json.action }}",
+            "Summary": "={{ $json.summary }}",
+            "Risk Level": "={{ $json.riskLevel }}"
+          },
+          "schema": [
+            {
+              "id": "Date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Coins",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Coins",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Risk Level",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Risk Level",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Score",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Action",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Action",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Link",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Link",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "9a82ddfd-7790-4d85-a5b6-0f86c1b3c86f",
+      "name": "8. Sheets - Log Full Risk Record",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4512,
+        1504
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "cond-high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "HIGH"
+            },
+            {
+              "id": "cond-medium",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "MEDIUM"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "80ea61b1-beb2-4aec-9ac4-6ec833d65b3d",
+      "name": "9. IF - HIGH or MEDIUM Priority?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4752,
+        1504
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_ALERT_EMAIL",
+        "subject": "={{ '[' + $json.priority + '] Crypto Alert: ' + $json.title }}",
+        "message": "=<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#f5f5f5;\">\n  <div style=\"background:{{ $json.priority === 'HIGH' ? '#dc2626' : '#d97706' }};padding:18px 22px;border-radius:8px 8px 0 0;\">\n    <h2 style=\"color:#fff;margin:0;font-size:16px;\">{{ $json.priority }} Priority Crypto Alert</h2>\n    <p style=\"color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:12px;\">{{ $json.pubDate }}</p>\n  </div>\n  <div style=\"background:#fff;padding:18px 22px;\">\n    <h3 style=\"margin:0 0 12px;font-size:15px;color:#111;\">{{ $json.title }}</h3>\n    <table style=\"width:100%;font-size:13px;margin-bottom:14px;\">\n      <tr><td style=\"color:#555;padding:4px 0;width:90px;\">Coins</td><td style=\"color:#111;font-weight:600;\">{{ $json.coins || 'N/A' }}</td></tr>\n      <tr><td style=\"color:#555;padding:4px 0;\">Risk Level</td><td style=\"color:#111;font-weight:600;\">{{ $json.riskLevel }}</td></tr>\n      <tr><td style=\"color:#555;padding:4px 0;\">Score</td><td style=\"color:#111;font-weight:600;\">{{ $json.score }}/100</td></tr>\n    </table>\n    <div style=\"background:#f8f9fa;border-left:4px solid #6366f1;padding:12px 14px;border-radius:0 6px 6px 0;margin-bottom:12px;\">\n      <div style=\"font-size:12px;font-weight:700;color:#4338ca;margin-bottom:4px;\">AI Summary</div>\n      <p style=\"margin:0;font-size:13px;color:#333;line-height:1.6;\">{{ $json.summary }}</p>\n    </div>\n    <div style=\"background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 14px;border-radius:0 6px 6px 0;margin-bottom:14px;\">\n      <div style=\"font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;\">Recommended Action</div>\n      <p style=\"margin:0;font-size:13px;color:#333;font-weight:600;\">{{ $json.action }}</p>\n    </div>\n    <a href=\"{{ $json.link }}\" style=\"display:inline-block;background:#6366f1;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;\">Read Full Article</a>\n    <div style=\"margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb;\">\n      <p style=\"font-size:11px;color:#9ca3af;margin:0;\">Crypto News Risk Monitor - n8n + OpenAI. Not financial advice.</p>\n    </div>\n  </div>\n</div>",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Crypto Risk Monitor"
+        }
+      },
+      "id": "d7e99e79-42d7-427a-9534-08ddca7eb597",
+      "name": "10. Gmail - Send Risk Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        5104,
+        1488
+      ],
+      "webhookId": "773ba3fc-5d8a-4187-9a3c-6ef760f07e54",
+      "typeVersion": 2.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "3. IF - Is Crypto Relevant?": {
+      "main": [
+        [
+          {
+            "node": "4. Sheets - Check If Already Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4b. Code - Skip If Already Seen": {
+      "main": [
+        [
+          {
+            "node": "5. HTTP - OpenAI Crypto Risk Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. IF - HIGH or MEDIUM Priority?": {
+      "main": [
+        [
+          {
+            "node": "10. Gmail - Send Risk Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Code - Parse AI and Set Priority": {
+      "main": [
+        [
+          {
+            "node": "7. Sheets - Save Dedupe Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "8. Sheets - Log Full Risk Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "9. IF - HIGH or MEDIUM Priority?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. HTTP - OpenAI Crypto Risk Analysis": {
+      "main": [
+        [
+          {
+            "node": "6. Code - Parse AI and Set Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Sheets - Check If Already Processed": {
+      "main": [
+        [
+          {
+            "node": "4b. Code - Skip If Already Seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. RSS - Poll CoinDesk Every 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "2. Code - Extract Fields and Check Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Code - Extract Fields and Check Keywords": {
+      "main": [
+        [
+          {
+            "node": "3. IF - Is Crypto Relevant?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "960136ce-883d-4b44-9e44-82da32f4b59e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    }
+  ]
+}

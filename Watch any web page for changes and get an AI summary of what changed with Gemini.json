@@ -1,0 +1,533 @@
+{
+  "name": "Watch any web page for changes and get an AI summary of what changed with Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "acd8d9c1-1c40-4726-b91c-11f87cc3de21",
+      "name": "Schedule Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1280,
+        1200
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "label",
+              "name": "label",
+              "type": "string",
+              "value": "Competitor pricing"
+            },
+            {
+              "id": "url",
+              "name": "url",
+              "type": "string",
+              "value": "https://example.com/pricing"
+            },
+            {
+              "id": "sel",
+              "name": "selector",
+              "type": "string",
+              "value": "main"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "2c0ddf94-5ba5-4a4f-9127-c19156677617",
+      "name": "Set Page to Watch",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1056,
+        1200
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "af600375-8c38-4c85-8388-accbb5975006",
+      "name": "Fetch Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -848,
+        1200
+      ],
+      "typeVersion": 4.4,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let html = String($json.data || $json.body || '');\nconst sel = $('Set Page to Watch').item.json.selector;\nlet text = html.replace(/<script[\\s\\S]*?<\\/script>/gi, ' ').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\\s+/g, ' ').trim();\ntext = text.slice(0, 6000);\nreturn { label: $('Set Page to Watch').item.json.label, url: $('Set Page to Watch').item.json.url, currentText: text };"
+      },
+      "id": "e085c098-943b-454f-9d56-b7dbf48199a2",
+      "name": "Clean Page Text",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -384,
+        1184
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Select your spreadsheet"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Snapshots"
+        }
+      },
+      "id": "a44f160a-7dd5-40d6-8502-93e6c96b6d8d",
+      "name": "Get Last Snapshot",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -160,
+        1184
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const cur = $('Clean Page Text').item.json;\nconst prev = ($json && $json.Text != null) ? String($json.Text) : '';\nconst current = String(cur.currentText || '');\nconst isFirstRun = prev.length === 0;\nconst changed = !isFirstRun && prev !== current;\nreturn { label: cur.label, url: cur.url, previousText: prev, currentText: current, changed: changed, isFirstRun: isFirstRun };"
+      },
+      "id": "4f55213f-90fe-4d8c-ac3f-b4c4072c7cd4",
+      "name": "Detect Change",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        32,
+        1184
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.changed }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a88789c9-ef6f-4d82-9d4d-0508e2f241e3",
+      "name": "Changed?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        224,
+        1184
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a monitoring assistant. Below are the previous and current text of a web page we watch called \"{{ $json.label }}\". In two or three sentences, describe what actually changed in plain language (new prices, new features, removed items, wording changes). If the differences are trivial or cosmetic, say \"No meaningful change.\" Do not list the whole page.\n\nPREVIOUS:\n{{ $json.previousText }}\n\nCURRENT:\n{{ $json.currentText }}",
+        "batching": {}
+      },
+      "id": "57f5f53d-5a1b-48d2-9372-c37165c486c8",
+      "name": "Summarise Change with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        480,
+        1168
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "1adcaebf-c6a0-40d9-802c-a6bf512a7f17",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        416,
+        1328
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "#monitoring"
+        },
+        "text": "=*:eyes: Change detected: {{ $(\"Detect Change\").item.json.label }}*\n{{ $json.text }}\n{{ $(\"Detect Change\").item.json.url }}",
+        "otherOptions": {}
+      },
+      "id": "da64ff06-842b-42e0-8c10-68cbc16bbe7c",
+      "name": "Notify Change",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        768,
+        1168
+      ],
+      "webhookId": "de960502-ad73-4afa-8f8f-f68224524855",
+      "typeVersion": 2.5
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Select your spreadsheet"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Snapshots"
+        }
+      },
+      "id": "a7f6136b-9eb0-4823-a884-4637f07c9e20",
+      "name": "Update Snapshot (Changed)",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        944,
+        1168
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Select your spreadsheet"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Snapshots"
+        }
+      },
+      "id": "1acfa84c-6969-4b4d-b48e-4411976391f9",
+      "name": "Update Snapshot (Baseline)",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        480,
+        1488
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "#monitoring"
+        },
+        "text": "=*:x: Could not fetch {{ $(\"Set Page to Watch\").item.json.label }}*\nThe page did not respond. It will be retried on the next run.",
+        "otherOptions": {}
+      },
+      "id": "7ed1258a-b6f9-404a-957b-4a1318241fe4",
+      "name": "Report Fetch Failure",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        -608,
+        1296
+      ],
+      "webhookId": "e7f0433d-af0e-432e-a5ce-f54bb8e86d37",
+      "typeVersion": 2.5
+    },
+    {
+      "parameters": {
+        "content": "## Watch any web page for changes and get an AI summary of what changed\n\n### How it works\nInstead of re-reading a competitor page or a policy page yourself, this template watches it for you. On a schedule it fetches the page, strips it down to clean text, and compares it against the last snapshot stored in Google Sheets. On the very first run it just saves a baseline. When the text later changes, a Basic LLM Chain with Google Gemini reads the old and new versions and explains in two or three sentences what actually changed - a new price, a new feature, removed wording - rather than dumping the whole page, and calls out trivial edits as no meaningful change. Real changes are posted to Slack and the snapshot is updated so each change is reported once. Fetch failures are reported and retried next run.\n\n",
+        "height": 420,
+        "width": 568
+      },
+      "id": "64acf4e8-f0e2-41f7-a1ba-d25963b1293e",
+      "name": "Overview Sticky",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1920,
+        1072
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Fetch & clean\nRun on a schedule, fetch the page and strip it to clean text. Fetch failures go to Slack.",
+        "height": 664,
+        "width": 860,
+        "color": 7
+      },
+      "id": "2efdc566-9557-455c-b34d-3bda2cea469c",
+      "name": "S1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        1008
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Compare to last snapshot\nRead the previous snapshot from Sheets and diff it. First run saves a baseline silently.",
+        "height": 664,
+        "width": 620,
+        "color": 7
+      },
+      "id": "3356220a-d511-45e0-b590-644c64d6d84a",
+      "name": "S2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -448,
+        1008
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Summarise & notify (Basic LLM Chain)\nOn a real change, Gemini explains what changed, Slack is notified, and the snapshot is updated so each change is reported once.",
+        "height": 676,
+        "width": 948,
+        "color": 7
+      },
+      "id": "fd113325-03ff-4eaf-8796-74d829472d15",
+      "name": "S3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        1008
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Changed?": {
+      "main": [
+        [
+          {
+            "node": "Summarise Change with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Snapshot (Baseline)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Page": {
+      "main": [
+        [
+          {
+            "node": "Clean Page Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report Fetch Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Change": {
+      "main": [
+        [
+          {
+            "node": "Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Change": {
+      "main": [
+        [
+          {
+            "node": "Update Snapshot (Changed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Page Text": {
+      "main": [
+        [
+          {
+            "node": "Get Last Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Last Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Detect Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Page to Watch": {
+      "main": [
+        [
+          {
+            "node": "Fetch Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Set Page to Watch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarise Change with Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise Change with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Notify Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "97bf9308-5ec4-4671-9749-2b416b6c431f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z",
+      "id": "TQQNUlAM8h9e8zRY",
+      "name": "Template"
+    }
+  ]
+}

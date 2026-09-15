@@ -1,0 +1,444 @@
+{
+  "name": "Query and Monitor Shopify Orders via Telegram Bot Commands",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "id": "ebf48503-9e11-4dd2-92e7-6ed155336558",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -1200,
+        384
+      ],
+      "webhookId": "85257fe6-a492-4523-a3c0-156054b46d51",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "status": "open"
+        }
+      },
+      "id": "f2a7d3b2-643a-4392-a7f8-dfd0ced55e98",
+      "name": "get Orders",
+      "type": "n8n-nodes-base.shopify",
+      "position": [
+        -432,
+        96
+      ],
+      "notesInFlow": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').first().json.message.chat.id;\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: \"All Open Orders\",\n    reply_markup: {\n      inline_keyboard: items.map(order => [{\n        text: `${order.json.name} ($${order.json.total_price})`,\n        callback_data: `/order_${order.json.id}`\n      }])\n    }\n  }\n}];\n"
+      },
+      "id": "03bc8ff9-d78d-463c-b884-f618e819f218",
+      "name": "Orders",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        144,
+        -32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').first().json.message.chat.id;\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: \"No Order\",\n   \n  }\n}];\n"
+      },
+      "id": "fb3e51a6-c740-489a-a5b9-43f9bdc951ed",
+      "name": "No Order",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        144,
+        176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "operation": "get",
+        "orderId": "={{ $json.orderId }}",
+        "options": {}
+      },
+      "id": "69cebadd-b411-400d-9048-748780a2f228",
+      "name": "get Order",
+      "type": "n8n-nodes-base.shopify",
+      "position": [
+        -240,
+        512
+      ],
+      "notesInFlow": false,
+      "typeVersion": 1,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $json.line_items || [];\n\nlet message = '🧾 *'+ $input.first().json.name+'*\\n\\n';\n\nitems.forEach(item => {\n  const variant = item.variant_title ? ` ${item.variant_title}` : '';\n  message += `• ${item.title}${variant} x ${item.quantity} — $${item.price}\\n`;\n});\n\nreturn [{\n  json: {\n    text: message,\n    chat_id: $('Get Order ID').first().json.chat_id,  // pass this from previous step\n  \n    message_id: $('Get Order ID').first().json.message_id,\n    \n    parse_mode: \"Markdown\",\n    reply_markup: {\n      inline_keyboard: []\n    }\n  \n  }\n}];\n"
+      },
+      "id": "e958e558-4d2a-446f-a731-892030b4aab9",
+      "name": "Clean Up Order",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        48,
+        512
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "7cba3954-60cd-44ac-ad53-509ae2fcb6d2",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json }}",
+              "rightValue": "asdf"
+            },
+            {
+              "id": "a2964354-a639-4621-a895-00ad314f397f",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "id": "f3031ccf-012d-4267-84e7-508b127c9d08",
+      "name": "Check If There's Any Order",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -224,
+        96
+      ],
+      "typeVersion": 2.2,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "15856982-a1b8-4ec6-8fe1-4c4dea6c27cc",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/orders"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Get Order Detail"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b64cbec5-2e9f-4466-9753-4a3dd77fe381",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "/order_"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Get An Order"
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "id": "78851004-f2a6-4557-b279-a88e979c57b2",
+      "name": "Get All Orders/Get An Order Detail",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -944,
+        384
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const callbackData = $json.callback_query.data; // e.g., /order_5832437071968ACSbot\n\nconst id = callbackData.match(/^\\/order_(\\d+)/)?.[1];\n\nreturn [{\n  json: {\n    orderId: id,\n    chat_id: $json.callback_query.message.chat.id,\n    message_id: $json.callback_query.message.message_id\n  }\n}];"
+      },
+      "id": "2d0a6044-9378-49b0-95f8-61805f970b8f",
+      "name": "Get Order ID",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -560,
+        512
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot<Access Token>/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "reply_markup",
+              "value": "={{ JSON.stringify($json.reply_markup) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c16d56d-2c43-44f1-94c7-35daf6ab6880",
+      "name": "Send Orders to Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        80
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.message_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "73c66cd9-dab9-4159-8afd-dd4effd64da2",
+      "name": "Send Order Details",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        464,
+        512
+      ],
+      "webhookId": "fd0d23df-37db-4bd1-ae1e-dd03b54e6089",
+      "typeVersion": 1.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Orders": {
+      "main": [
+        [
+          {
+            "node": "Send Orders to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Order": {
+      "main": [
+        [
+          {
+            "node": "Send Orders to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get Order": {
+      "main": [
+        [
+          {
+            "node": "Clean Up Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get Orders": {
+      "main": [
+        [
+          {
+            "node": "Check If There's Any Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Order ID": {
+      "main": [
+        [
+          {
+            "node": "get Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Up Order": {
+      "main": [
+        [
+          {
+            "node": "Send Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Orders/Get An Order Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If There's Any Order": {
+      "main": [
+        [
+          {
+            "node": "Orders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Orders/Get An Order Detail": {
+      "main": [
+        [
+          {
+            "node": "get Orders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Order ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3ad842ad-25c5-47a0-8138-887d7ba3a3bc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "name": "Template",
+      "id": "TQQNUlAM8h9e8zRY",
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z"
+    }
+  ]
+}

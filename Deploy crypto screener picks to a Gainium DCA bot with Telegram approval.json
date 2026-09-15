@@ -1,0 +1,639 @@
+{
+  "name": "Deploy crypto screener picks to a Gainium DCA bot with Telegram approval",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Deploy crypto screener picks to a Gainium DCA bot with Telegram approval\n\n### How it works\n\nThis workflow runs each morning, reads configuration for a Gainium DCA bot, and fetches the top crypto screener results. It converts the screener output into a top-N pair list, sends the proposal to a trader on Telegram, and only updates and starts the bot if the trader approves. Deployment activity is logged to Google Sheets, while skipped runs and screener or workflow failures are reported through Telegram.\n\n### Setup steps\n\n- Configure the schedule trigger for the desired run time and timezone.\n- Add Gainium credentials and verify the configured bot_id, bot_type, top_n, and paper_trading values in the Config node.\n- Configure Telegram credentials, target chat IDs, and the approval message/response format used by the approval IF condition.\n- Connect Google Sheets credentials and select the spreadsheet/sheet used to log deployments.\n- Ensure the global error workflow is enabled in n8n so workflow-level failures trigger the Telegram error alert.\n\n### Customization\n\nAdjust top_n, paper_trading mode, screener criteria, approval wording, and the Google Sheets log columns to match the trading strategy and audit requirements.",
+        "height": 896,
+        "width": 480
+      },
+      "id": "ba144a0f-678b-4da7-995b-dd3bf8caa9b6",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        2272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Schedule and screen pairs\n\nStarts the daily run, sets Gainium bot parameters, retrieves screener results, and formats the top-N trading pairs for review.",
+        "height": 304,
+        "width": 960,
+        "color": 7
+      },
+      "id": "b6c7918b-e969-4a98-90a6-5eec1329397f",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2096,
+        2416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Request trader approval\n\nSends the proposed pair list to Telegram and routes execution based on whether the trader approves the deployment.",
+        "height": 320,
+        "width": 368,
+        "color": 7
+      },
+      "id": "0efd7247-ee65-4dd0-801e-4b47b94e0cab",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3184,
+        2384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Deploy approved bot\n\nFor approved proposals, replaces the bot pair list, starts the Gainium bot, records the deployment in Google Sheets, and confirms deployment in Telegram.",
+        "height": 304,
+        "width": 848,
+        "color": 7
+      },
+      "id": "1e4e5845-43c1-4ee7-b49d-96b180258bdd",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3664,
+        2272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Notify skipped deployment\n\nHandles the rejection path by notifying the trader that the proposed bot update was skipped.",
+        "height": 384,
+        "color": 7
+      },
+      "id": "3498d12c-dfa3-4ae8-ba54-6aa8af34501a",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3744,
+        2608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Failure alert handling\n\nContains the lower alert cluster for screener-specific failures and global workflow errors, both reported to Telegram.",
+        "height": 496,
+        "width": 416,
+        "color": 7
+      },
+      "id": "5aef7930-4279-45a8-b698-71b095915e9c",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2672,
+        2816
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "312e94d9-cf3e-435f-8573-495d551028c5",
+      "name": "Every Day at 8 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        2144,
+        2544
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "bot_id",
+              "type": "string",
+              "value": "PUT_YOUR_DCA_BOT_ID_HERE"
+            },
+            {
+              "id": "c2",
+              "name": "bot_type",
+              "type": "string",
+              "value": "dca"
+            },
+            {
+              "id": "c3",
+              "name": "top_n",
+              "type": "number",
+              "value": 5
+            },
+            {
+              "id": "c4",
+              "name": "paper_trading",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "c5",
+              "name": "telegram_chat_id",
+              "type": "string",
+              "value": "PUT_YOUR_TELEGRAM_CHAT_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "576f442f-2818-4dab-a44b-00e788b97e4e",
+      "name": "Set Bot Configuration",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2400,
+        2544
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "pageSize": 25,
+        "resource": "general",
+        "sortType": "desc",
+        "sortField": "totalVolume",
+        "filterModel": "{\n  \"items\": [\n    { \"field\": \"marketCap\", \"operator\": \">=\", \"value\": \"2+1234567890\", \"id\": 1 },\n    { \"field\": \"exchanges\", \"operator\": \"contains\", \"value\": \"binance\", \"id\": 2 },\n    { \"field\": \"priceChangePercentage24h\", \"operator\": \">\", \"value\": \"0\", \"id\": 3 }\n  ],\n  \"linkOperator\": \"and\"\n}"
+      },
+      "id": "98190676-82af-4b12-af49-08328024f5da",
+      "name": "Fetch Top Screener Coins",
+      "type": "n8n-nodes-gainium.Gainium",
+      "position": [
+        2688,
+        2544
+      ],
+      "typeVersion": 2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the top-N pairs string from screener output.\n// Screener is already sorted by total volume desc; we clean + cap it.\nconst STABLE = new Set(['USDT','USDC','DAI','TUSD','FDUSD','BUSD','USDE','USD','PYUSD']);\nconst QUOTE = 'USDT';\nconst TOP_N = Number($('Set Bot Configuration').first().json.top_n) || 5;\n\nlet rows = $input.all().map(i => i.json);\n// Unwrap if the API returned a single item wrapping an array\nif (rows.length === 1 && Array.isArray(rows[0]?.data)) rows = rows[0].data;\nif (rows.length === 1 && Array.isArray(rows[0]?.result)) rows = rows[0].result;\nif (rows.length === 1 && Array.isArray(rows[0]?.data?.result)) rows = rows[0].data.result;\nif (rows.length === 1 && Array.isArray(rows[0]?.items)) rows = rows[0].items;\n\nconst pairs = [];\nfor (const r of rows) {\n  let sym = String(r.symbol || r.baseAsset || r.coin || r.ticker || '').toUpperCase().trim();\n  if (!sym) continue;\n  sym = sym.replace(/[_/-]?USDT$/, '');\n  if (!sym || STABLE.has(sym)) continue;\n  const pair = sym + '_' + QUOTE;\n  if (!pairs.includes(pair)) pairs.push(pair);\n  if (pairs.length >= TOP_N) break;\n}\n\nif (pairs.length === 0) {\n  throw new Error('Screener returned no usable pairs — check filter/credentials/field names.');\n}\n\nreturn [{ json: { pairs: pairs.join(','), list: pairs, count: pairs.length } }];"
+      },
+      "id": "6531bab9-4436-430e-9698-e0c4d3d31e9b",
+      "name": "Build Top Pairs String",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2912,
+        2544
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Set Bot Configuration').item.json.telegram_chat_id }}",
+        "message": "=📈 Gainium daily deploy — your approval needed\n\nMode: {{ $('Set Bot Configuration').item.json.paper_trading ? '🧪 PAPER' : '🔴 LIVE' }}\nBot: {{ $('Set Bot Configuration').item.json.bot_id }}\n\nTop {{ $json.count }} pairs from today's screener:\n{{ $json.list.join('\\n') }}\n\nDeploy these to the bot and start it?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Deploy",
+            "disapproveLabel": "❌ Skip today"
+          }
+        },
+        "options": {}
+      },
+      "id": "aea84462-5522-4531-8d61-d79219be10ee",
+      "name": "Send Pairs Proposal to Trader",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        3232,
+        2544
+      ],
+      "webhookId": "gainium-approve-0001",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond1",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fa6bdadb-2847-4cdc-893f-f72601ff0171",
+      "name": "Check if Approved",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3408,
+        2544
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "botId": "={{ $('Set Bot Configuration').item.json.bot_id }}",
+        "botType": "={{ $('Set Bot Configuration').item.json.bot_type }}",
+        "operation": "changePairs",
+        "pairsToSet": "={{ $('Build Top Pairs String').item.json.pairs }}",
+        "paperContext": "={{ $('Set Bot Configuration').item.json.paper_trading }}"
+      },
+      "id": "6067b0bd-c804-4516-aefc-34e6d4eca00d",
+      "name": "Update Bot Pairs",
+      "type": "n8n-nodes-gainium.Gainium",
+      "position": [
+        3712,
+        2400
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "botId": "={{ $('Set Bot Configuration').item.json.bot_id }}",
+        "botType": "={{ $('Set Bot Configuration').item.json.bot_type }}",
+        "operation": "start",
+        "paperContext": "={{ $('Set Bot Configuration').item.json.paper_trading }}"
+      },
+      "id": "5bbc289a-258f-4147-95a7-925d7e06bea3",
+      "name": "Activate Trading Bot",
+      "type": "n8n-nodes-gainium.Gainium",
+      "position": [
+        3936,
+        2400
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PUT_YOUR_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Deployments"
+        },
+        "columns": {
+          "value": {
+            "date": "={{ $now.format('yyyy-LL-dd HH:mm') }}",
+            "mode": "={{ $('Set Bot Configuration').item.json.paper_trading ? 'paper' : 'live' }}",
+            "count": "={{ $('Build Top Pairs String').item.json.count }}",
+            "pairs": "={{ $('Build Top Pairs String').item.json.pairs }}",
+            "bot_id": "={{ $('Set Bot Configuration').item.json.bot_id }}",
+            "status": "deployed"
+          },
+          "schema": [
+            {
+              "id": "date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bot_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "bot_id",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mode",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "mode",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pairs",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "pairs",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "count",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "count",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "status",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "d7455296-541b-4e64-a806-3115a60e966a",
+      "name": "Log Deployment in Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4160,
+        2400
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Set Bot Configuration').item.json.telegram_chat_id }}",
+        "text": "=✅ *Deployed to {{ $('Set Bot Configuration').item.json.bot_id }}*\n\n*Mode:* {{ $('Set Bot Configuration').item.json.paper_trading ? '🧪 paper' : '🔴 live' }}\n*Pairs ({{ $('Build Top Pairs String').item.json.count }}):* `{{ $('Build Top Pairs String').item.json.pairs }}`\n*Time:* {{ $now.format('MMM d, yyyy HH:mm') }}\n\nBot pairs replaced and started. Logged to Sheets.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "164c4627-733c-402b-b3b4-7028ed5c2b29",
+      "name": "Confirm Deployment to Trader",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        4368,
+        2400
+      ],
+      "webhookId": "gainium-notify-deployed",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Set Bot Configuration').item.json.telegram_chat_id }}",
+        "text": "=⏭️ *Skipped today*\n\nNo changes made to *{{ $('Set Bot Configuration').item.json.bot_id }}*.\nProposed pairs were: `{{ $('Build Top Pairs String').item.json.pairs }}`\n*Time:* {{ $now.format('MMM d, yyyy HH:mm') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "cd2e9fca-6a4c-4686-8b57-6bad5d0387d3",
+      "name": "Inform Trader – Skipped",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        3792,
+        2816
+      ],
+      "webhookId": "gainium-notify-skipped",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "PUT_YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚨 *Gainium screener call failed*\n\n*Error:* {{ $json.error?.message || $json.error || 'unknown' }}\n*Time:* {{ $now.format('MMM d, yyyy HH:mm') }}\n\nNo pairs were deployed. Check your Gainium API credential / filter.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "fe06ed01-04f4-4eb4-8fa0-3324d86b2980",
+      "name": "Notify Screener Failure",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2944,
+        2976
+      ],
+      "webhookId": "gainium-alert-screener",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {},
+      "id": "96afc72a-36c8-40e2-a121-c6505686625c",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "position": [
+        2720,
+        3152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "PUT_YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚨 *Gainium deploy workflow error*\n\n*Workflow:* {{ $workflow.name }}\n*Failed node:* {{ $execution.lastNodeExecuted }}\n*Execution:* {{ $execution.id }}\n*Time:* {{ $now.format('MMM d, yyyy HH:mm') }}\n\nCheck the n8n execution log.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "622b3a44-b2c9-4003-af9b-47198b00334e",
+      "name": "Send Workflow Error Alert",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2944,
+        3152
+      ],
+      "webhookId": "gainium-alert-global",
+      "typeVersion": 1.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Update Bot Pairs": {
+      "main": [
+        [
+          {
+            "node": "Activate Trading Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Approved": {
+      "main": [
+        [
+          {
+            "node": "Update Bot Pairs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inform Trader – Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every Day at 8 AM": {
+      "main": [
+        [
+          {
+            "node": "Set Bot Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Send Workflow Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activate Trading Bot": {
+      "main": [
+        [
+          {
+            "node": "Log Deployment in Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Bot Configuration": {
+      "main": [
+        [
+          {
+            "node": "Fetch Top Screener Coins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Top Pairs String": {
+      "main": [
+        [
+          {
+            "node": "Send Pairs Proposal to Trader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Top Screener Coins": {
+      "main": [
+        [
+          {
+            "node": "Build Top Pairs String",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Screener Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Deployment in Sheets": {
+      "main": [
+        [
+          {
+            "node": "Confirm Deployment to Trader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Pairs Proposal to Trader": {
+      "main": [
+        [
+          {
+            "node": "Check if Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "86e35c91-3ed0-4ccf-ab0b-8c62a90a5eca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "name": "template",
+      "id": "08TQIJECNM5nFlxk",
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z"
+    },
+    {
+      "name": "trello",
+      "id": "01J19IAeCMbwcFBQ",
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z"
+    },
+    {
+      "name": "shopify",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z"
+    },
+    {
+      "name": "gsheet",
+      "id": "SNNwZxvHOLrlx751",
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z"
+    },
+    {
+      "name": "google-sheet",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z"
+    }
+  ]
+}

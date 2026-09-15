@@ -1,0 +1,356 @@
+{
+  "name": "Track competitor G2 reviews in Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "0ec24182-a1fe-406b-bebb-44da9707858e",
+      "name": "Every Monday morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        624,
+        432
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e2d914-0010-4c10-9010-+1234567890",
+              "name": "productUrls",
+              "type": "array",
+              "value": "[\"https://www.g2.com/products/asana/reviews\", \"https://www.g2.com/products/trello/reviews\"]"
+            },
+            {
+              "id": "b7e2d914-0011-4c11-9011-+1234567890",
+              "name": "maxReviewsPerProduct",
+              "type": "number",
+              "value": "25"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7c0b29d9-7d32-49e2-9d8c-70dbb625335a",
+      "name": "Set the products to watch",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        880,
+        432
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "memory": 128,
+        "actorId": "johnvc~g2-reviews-api",
+        "resource": "Actors",
+        "operation": "Run actor and get dataset",
+        "customBody": "={{ JSON.stringify({ productUrls: $json.productUrls, maxReviewsPerProduct: $json.maxReviewsPerProduct }) }}"
+      },
+      "id": "21d23051-4dd7-46a4-a867-85e018475f89",
+      "name": "Fetch reviews for each product",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "position": [
+        1152,
+        432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "b7e2d914-0041-4c41-9041-+1234567890",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.result_type }}",
+              "rightValue": "review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a37f9554-7722-42a4-9fe5-f2dc1ad2b853",
+      "name": "Keep rows that are real reviews",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        1408,
+        432
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// One row per G2 review, trimmed to what fits a spreadsheet.\n// The pros and cons fields are where the buying objections live, so they\n// stay whole; the long free-text answer is truncated instead.\nconst weekOf = $now.toFormat('yyyy-MM-dd');\n\nconst clip = (s, n) => {\n  const v = String(s || '').replace(/\\s+/g, ' ').trim();\n  return v.length > n ? v.slice(0, n - 3) + '...' : v;\n};\n\nreturn $input.all().map((item) => {\n  const r = item.json;\n  // G2 does not expose a star rating on every review, so this is often blank.\n  const rating = typeof r.rating === 'number' ? r.rating : '';\n  return {\n    json: {\n      'Week of': weekOf,\n      Product: r.productName || '',\n      Rating: rating,\n      Title: clip(r.title, 200),\n      Pros: clip(r.pros, 700),\n      Cons: clip(r.cons, 700),\n      'Reviewer role': r.reviewerRole || '',\n      'Company size': r.companySize || '',\n      'Date published': String(r.datePublished || '').slice(0, 10),\n      'Review link': r.reviewUrl || '',\n      'Review ID': r.reviewId || '',\n    },\n  };\n});\n"
+      },
+      "id": "1eefabe7-4480-4198-9646-b643729f4166",
+      "name": "Shape review rows for the sheet",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1664,
+        432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "d2928d42-a711-4bdf-a53e-e6871b8414d4",
+      "name": "Append this week's reviews",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1920,
+        432
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "content": "## Track competitor G2 reviews in Google Sheets\n\nNo ScrapingBee account, no Bright Data account, and no AI model. Every week this workflow pulls the latest G2 reviews for the products you list and appends one row each to your sheet: product, the pros and cons in the reviewer's own words, their role, company size, star rating where G2 published one, and a link back to the review.\n\nPoint it at your own product and your two closest competitors. The Cons column then becomes a running list of the objections a prospect will bring to your next sales call, written by people who already switched.\n\n",
+        "height": 388,
+        "width": 520
+      },
+      "id": "0481433f-2e7e-4afe-8563-07da48aa500b",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 1. Schedule\nRuns every Monday morning. Change the cadence, or swap in a manual trigger while you test.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "a3f22978-db5d-4179-beba-7295f753ef91",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 2. Your input\nThe G2 product URLs to watch and how many reviews to pull for each. This is the only node you edit.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "6392f52e-57ca-43e9-9779-581ceb11e40c",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 3. Fetch\nPulls the reviews for each product. Add your Apify credential here.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "f53e211d-141e-4094-bc78-8f173a38fa2d",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 4. Clean\nDrops any product that returned an error, so only real reviews reach the sheet.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "8c374d01-94c4-4351-9a9a-3adbc028f7d5",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 5. Shape\nTrims the long text fields so a row fits a spreadsheet cell.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "8fe1e7ec-8a54-4b59-bb78-367806f1f4ec",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1632,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 6. Deliver\nPick your spreadsheet and tab. Columns map automatically.",
+        "height": 240,
+        "color": 7
+      },
+      "id": "802479fb-8eee-4565-8870-6a70a5c9f5df",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1888,
+        32
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Monday morning": {
+      "main": [
+        [
+          {
+            "node": "Set the products to watch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set the products to watch": {
+      "main": [
+        [
+          {
+            "node": "Fetch reviews for each product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch reviews for each product": {
+      "main": [
+        [
+          {
+            "node": "Keep rows that are real reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep rows that are real reviews": {
+      "main": [
+        [
+          {
+            "node": "Shape review rows for the sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape review rows for the sheet": {
+      "main": [
+        [
+          {
+            "node": "Append this week's reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c88a770b-2cf9-479e-a15d-e0b398746efa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z",
+      "id": "TQQNUlAM8h9e8zRY",
+      "name": "Template"
+    }
+  ]
+}

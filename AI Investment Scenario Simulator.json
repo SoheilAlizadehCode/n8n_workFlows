@@ -1,0 +1,527 @@
+{
+  "name": "AI Investment Scenario Simulator",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "b2b6253f-3e4d-45bd-88fb-db1f8d07379b",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "position": [
+        3120,
+        2496
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## AI Investment Scenario Simulator\n\nThis workflow analyzes an investment scenario using user inputs and enhances it with AI-driven insights and real-time market context. It begins by receiving investment details such as amount, expected return, and time horizon through a webhook. The inputs are validated to ensure they meet logical constraints before further processing.\n\nAfter validation, the workflow calculates projected future value using compound growth logic and determines a risk profile (Low, Medium, High) based on expected return. It then dynamically fetches relevant market news using a risk-based RSS query, sorts and limits the results, and structures them for AI consumption.\n\nThe AI model processes all inputs, projections, risk level, and market context to generate a clear explanation along with three tailored investment suggestions across different risk levels. The final response is formatted into structured JSON and returned via webhook.\n\n",
+        "height": 448,
+        "width": 576
+      },
+      "id": "273d5d9d-3364-4c60-aa2c-0bdd6f3f7d7a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation\n\nThis section receives investment inputs via webhook and validates them using conditional logic. If any value falls outside acceptable ranges, an error response is immediately returned, ensuring only valid data proceeds to further processing and analysis.",
+        "height": 736,
+        "width": 608,
+        "color": 7
+      },
+      "id": "b316dc14-71bd-437b-82f1-9d92e82a2a1b",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Data Processing & Risk\n\nThis section transforms validated input into structured variables and performs core calculations. It computes future investment value using compound growth and assigns a risk level based on expected return, forming the foundation for downstream analysis.",
+        "height": 736,
+        "width": 352,
+        "color": 7
+      },
+      "id": "fe87c288-1e37-4646-b72f-491c9b7c4bcd",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1872,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## AI Analysis\n\nThis section sends structured investment data and curated market insights to the AI model. The model analyzes the scenario and generates a clear explanation along with three investment suggestions aligned to different risk levels in a structured format.",
+        "height": 736,
+        "width": 352,
+        "color": 7
+      },
+      "id": "9970862d-a494-4d7b-9ae9-4f78fca88092",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3024,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Output Handling\n\nThis section formats the AI-generated response into a structured JSON output that includes input details, projections, and analysis. The final result is returned via webhook, making it ready for integration with external applications or user interfaces.",
+        "height": 736,
+        "width": 448,
+        "color": 7
+      },
+      "id": "afa8886c-12d2-489c-97c7-258e0e9ce442",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3392,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Market Insights\n\nThis section retrieves real-time market news using a dynamically generated RSS query based on risk level. The results are sorted, limited to the most relevant items, and then structured into a simplified format for efficient use in AI processing.",
+        "height": 736,
+        "width": 752,
+        "color": 7
+      },
+      "id": "d81c9695-c4a2-4401-b6ae-dbccf64f1af2",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2240,
+        1872
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "investment-simulator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "89fa967c-a8ba-4c6a-bd85-317df44f8e6d",
+      "name": "Receive Investment Input",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        1264,
+        2176
+      ],
+      "webhookId": "5bba329c-262b-4990-9e55-b01f943a807b",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "b98bf7ea-880c-4ddb-9581-67b610dff069",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              },
+              "leftValue": "={{ $json.body.principal }}",
+              "rightValue": 1000
+            },
+            {
+              "id": "ea7549e3-8788-4075-ae1e-7b451f94cf6e",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.body.rate < 0 || $json.body.rate > 50 }}",
+              "rightValue": 0
+            },
+            {
+              "id": "2996a07c-6e4b-4e40-9b4e-ad1d810bfd95",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              },
+              "leftValue": "={{ $json.body.time }}",
+              "rightValue": 1
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3775604a-29b8-4f31-b6bb-e5100ff12d37",
+      "name": "Validate User Input",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1440,
+        2176
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": \"false\",\n  \"error\": \"Invalid input. Ensure amount > 0, return between 0–50%, and years > 0.\"\n}",
+        "options": {}
+      },
+      "id": "d4e8832c-2bca-4afd-8233-14efa2f86301",
+      "name": "Invalid Input Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1680,
+        2048
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "23cb1a55-84b9-4ade-8854-5476ddc3b927",
+              "name": "amount",
+              "type": "number",
+              "value": "={{ $json.body.principal }}"
+            },
+            {
+              "id": "12588aea-4a5e-498d-a4a7-b73773392f57",
+              "name": "rate",
+              "type": "number",
+              "value": "={{ $json.body.rate / 100 }}"
+            },
+            {
+              "id": "fd5d141e-c3d0-4479-979a-a0cb49a1414c",
+              "name": "years",
+              "type": "number",
+              "value": "={{ $json.body.time }}"
+            },
+            {
+              "id": "7d82c663-9a67-4dc2-9c20-55e2629215f5",
+              "name": "future_value",
+              "type": "number",
+              "value": "=  {{ $json.body.principal * Math.pow(1 + ($json.body.rate / 100),$json.body.time) }}"
+            },
+            {
+              "id": "c9c5bdd0-e890-4ca9-a889-4af5f8155bc8",
+              "name": "profit",
+              "type": "number",
+              "value": "=  {{ $json.body.principal * Math.pow(1 + ($json.body.rate / 100),$json.body.time) \n-\n$json.body.principal\n}}  "
+            },
+            {
+              "id": "7972be69-688b-4e50-ab05-1ecea29fc666",
+              "name": "risk_level",
+              "type": "string",
+              "value": "={{ $json.body.rate < 8 ? \"Low Risk\" : ($json.body.rate < 15 ? \"Medium Risk\" : \"High Risk\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5ec96f4c-e5af-4dc0-bbc0-23da1e1c480b",
+      "name": "Calculate Projection & Risk Profile",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2016,
+        2272
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ \n  $json.risk_level === \"Low Risk\" \n    ? \"https://news.google.com/rss/search?q=inflation+interest+rates+economy\"\n    : $json.risk_level === \"Medium Risk\"\n    ? \"https://news.google.com/rss/search?q=stock+market+etf+earnings\"\n    : \"https://news.google.com/rss/search?q=crypto+bitcoin+startup+tech+stocks\"\n}}",
+        "options": {}
+      },
+      "id": "73743dbf-4b1c-4bd2-9fc7-821b13a6b272",
+      "name": "Fetch Market News (Dynamic by Risk)",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        2272,
+        2272
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "isoDate",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7ce9ab30-e6ac-4231-90fd-28d7ce1845e6",
+      "name": "Latest Market News First",
+      "type": "n8n-nodes-base.sort",
+      "position": [
+        2480,
+        2272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "id": "f2d4afbd-81c5-4bae-821e-942e87d824ee",
+      "name": "Top 5 Market News",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        2672,
+        2272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst market_data = [];\n\nfor (const item of $input.all()) {\n  market_data.push({\n    \"title\" : item.json.title,\n    \"link\" : item.json.link              \n  })\n}\n\nreturn {\n  json:{\n    market_data\n  }\n};"
+      },
+      "id": "58ef3b0b-27ca-4e77-89eb-05c72d9a4f63",
+      "name": "Structure Market News for AI",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2864,
+        2272
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional financial advisor AI.\n\nAnalyze the following investment scenario and provide a clear, structured response.\n\n### User Input:₹{{ $('Calculate Projection & Risk Profile').item.json.amount }}\n- Investment Amount: \n- Expected Annual Return: {{ $('Calculate Projection & Risk Profile').item.json.rate * 100 }}%\n- Time Horizon: {{ $('Calculate Projection & Risk Profile').item.json.years }} years\n- Calculated Future Value: ₹{{ $('Calculate Projection & Risk Profile').item.json.future_value }}\n- Estimated Profit:₹{{ $('Calculate Projection & Risk Profile').item.json.profit }}\n- Risk Profile: {{ $('Calculate Projection & Risk Profile').item.json.risk_level }}\n\n### Market Context:\n{{ \n  $json.market_data\n    .map(item => `- ${item.title} (${item.link})`)\n    .join('\\n')\n}}\n---\n\n### Your Tasks:\n\n1. Explain the investment outcome in SIMPLE terms (2–3 sentences).\n2. Interpret whether this is realistic or aggressive.\n3. Provide EXACTLY 3 investment suggestions:\n   - Low Risk Option\n   - Medium Risk Option\n   - High Risk Option\n\nFor EACH suggestion include:\n- Name\n- Why it fits\n- Expected behavior\n- Confidence (Low/Medium/High)\n\n4. Keep response concise, structured, and beginner-friendly.\n\n---\n\n### Output Format (STRICT JSON):\n\n{\n  \"summary\": \"...\",\n  \"insight\": \"...\",\n  \"suggestions\": [\n    {\n      \"type\": \"Low Risk\",\n      \"name\": \"...\",\n      \"reason\": \"...\",\n      \"confidence\": \"...\"\n    },\n    {\n      \"type\": \"Medium Risk\",\n      \"name\": \"...\",\n      \"reason\": \"...\",\n      \"confidence\": \"...\"\n    },\n    {\n      \"type\": \"High Risk\",\n      \"name\": \"...\",\n      \"reason\": \"...\",\n      \"confidence\": \"...\"\n    }\n  ]\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "91995b1e-76de-454c-893e-6efd62f241e8",
+      "name": "AI - Investment Analysis & Suggestions",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3088,
+        2272
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\" : \"true\",\n  \"response\" : {\n  \"input\" :  {\n    \"amount\" : {{ $('Validate User Input').item.json.body.principal }},\n    \"return\" : {{ $('Validate User Input').item.json.body.rate }},\n    \"years\"  : {{ $('Validate User Input').item.json.body.time }}\n  },\n  \"projection\" : {\n    \"future_value\" : {{ $('Calculate Projection & Risk Profile').item.json.future_value }},\n    \"profit\" : {{ $('Calculate Projection & Risk Profile').item.json.profit }},\n    \"risk_level\" : \"{{ $('Calculate Projection & Risk Profile').item.json.risk_level }}\"\n  },\n  \"ai_analysis\" : \n    {{ $json.output }}\n  }\n}\n",
+        "options": {}
+      },
+      "id": "053044e7-ce44-45c2-b64e-5d6d99a0b13d",
+      "name": "Format Final Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3424,
+        2272
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "ac2abb6e-c738-48b8-8759-cc54ce2d6955",
+      "name": "Send Final Output",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        3616,
+        2272
+      ],
+      "typeVersion": 1.5
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Investment Analysis & Suggestions",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 5 Market News": {
+      "main": [
+        [
+          {
+            "node": "Structure Market News for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate User Input": {
+      "main": [
+        [
+          {
+            "node": "Invalid Input Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate Projection & Risk Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Final Response": {
+      "main": [
+        [
+          {
+            "node": "Send Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Latest Market News First": {
+      "main": [
+        [
+          {
+            "node": "Top 5 Market News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Investment Input": {
+      "main": [
+        [
+          {
+            "node": "Validate User Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure Market News for AI": {
+      "main": [
+        [
+          {
+            "node": "AI - Investment Analysis & Suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Projection & Risk Profile": {
+      "main": [
+        [
+          {
+            "node": "Fetch Market News (Dynamic by Risk)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Market News (Dynamic by Risk)": {
+      "main": [
+        [
+          {
+            "node": "Latest Market News First",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Investment Analysis & Suggestions": {
+      "main": [
+        [
+          {
+            "node": "Format Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "95ab3c08-1d42-4081-aa54-2edec7b131e5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "name": "Template",
+      "id": "TQQNUlAM8h9e8zRY",
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z"
+    }
+  ]
+}

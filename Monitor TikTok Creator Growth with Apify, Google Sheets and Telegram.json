@@ -1,0 +1,1122 @@
+{
+  "name": "Monitor TikTok Creator Growth with Apify, Google Sheets and Telegram",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fde3e80e-b545-4c35-8fde-0685cf76cca8",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        3152,
+        1472
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "bd0c9e23-54a3-4227-bc19-1134edf58330",
+      "name": "Weekly Monday Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        3152,
+        1264
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1YV806viFdmh0J6m2OuzZXhgDvrrWL8-GqU-DKh5ygKE",
+          "cachedResultName": "FetchCat n8n QA - TikTok Profiles"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "933636260",
+          "cachedResultName": "Creators"
+        },
+        "options": {}
+      },
+      "id": "1a48f1da-fe3f-40bb-9087-deb720585f8d",
+      "name": "1. Read Creator Watchlist",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3424,
+        1392
+      ],
+      "typeVersion": 4.7,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json || {});\nconst isActive = (value) => !['false', 'no', '0', 'inactive', 'paused'].includes(String(value ?? '').trim().toLowerCase());\nconst numberOr = (value, fallback) => value === '' || value === null || value === undefined || !Number.isFinite(Number(value)) ? fallback : Number(value);\nconst configs = [];\nconst seen = new Set();\nfor (const row of rows) {\n  const source = String(row['TikTok handle or URL'] || row['TikTok handle'] || row.Handle || row.handle || '').trim();\n  if (!source || !isActive(row.Active)) continue;\n  const urlMatch = source.match(/(?:https?:\\/\\/)?(?:www\\.)?tiktok\\.com\\/@([A-Za-z0-9._-]+)/i);\n  const handle = (urlMatch?.[1] || source.replace(/^@/, '')).trim().toLowerCase();\n  if (!/^[a-z0-9._-]{2,64}$/.test(handle)) throw new Error('Invalid TikTok creator in Creators sheet: ' + source);\n  if (seen.has(handle)) continue;\n  seen.add(handle);\n  const minimumFollowers = Math.max(0, numberOr(row['Minimum followers'], 0));\n  const maximumFollowers = Math.max(minimumFollowers, numberOr(row['Maximum followers'], 1+1234567890));\n  configs.push({\n    handle,\n    label: String(row.Label || row.Niche || '').trim(),\n    minimumFollowers,\n    maximumFollowers,\n    alertGrowthPercent: Math.max(0, numberOr(row['Alert growth %'], 5)),\n    alertFollowerGain: Math.max(0, numberOr(row['Alert follower gain'], 1000))\n  });\n}\nif (configs.length === 0) throw new Error('Add at least one active creator to the Creators sheet.');\nif (configs.length > 500) throw new Error('The monitor supports at most 500 active creators per run.');\nreturn [{ json: {\n  configs,\n  actorInput: { handles: configs.map((entry) => entry.handle), profileUrls: [], maxProfiles: configs.length, includeRecentVideos: false, maxVideosPerProfile: 0, maxConcurrency: 3, runTimeSecs: 270, proxyConfiguration: { useApifyProxy: true } }\n} }];"
+      },
+      "id": "66b2c048-df0d-436a-abc8-a8729786f2ca",
+      "name": "Validate Watchlist and Build Actor Input",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3664,
+        1392
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/B5qu4d1iteAp2TaF1/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "waitForFinish",
+              "value": "300"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept-Encoding",
+              "value": "identity"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.actorInput }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 310000
+        }
+      },
+      "id": "c31f723b-78c2-4d55-acfd-696d6d314fa5",
+      "name": "2. Run FetchCat TikTok Profile Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3904,
+        1392
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.data.defaultDatasetId }}/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "clean",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "={{ $(\"Validate Watchlist and Build Actor Input\").first().json.configs.length }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "235a025c-d151-4d2b-ad88-584b38a42f7e",
+      "name": "Download Current TikTok Profiles",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        4144,
+        1392
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst rows = $input.all().map((item) => item.json).filter((item) => item && item.handle && !item.error);\nif (rows.length === 0) throw new Error('TikTok returned no public profiles. Check the handles or profile URLs and inspect the Actor run.');\nconst sheetsEpochOffset = 25569;\nconst serial = (value) => {\n  const date = new Date(value || Date.now());\n  return Number.isFinite(date.getTime()) ? date.getTime() / 86400000 + sheetsEpochOffset : null;\n};\nconst numberOrNull = (value) => Number.isFinite(Number(value)) ? Number(value) : null;\nconst formula = (url, label) => url ? '=HYPERLINK(\"' + String(url).replace(/\"/g, '\"\"') + '\",\"' + String(label).replace(/\"/g, '\"\"') + '\")' : '';\nconst stateLabel = (value, label) => value === true ? '☑ ' + label : '✕ No';\nreturn rows.map((profile) => {\n  const handleKey = String(profile.handle).trim().replace(/^@/, '').toLowerCase();\n  const profileUrl = String(profile.profileUrl || ('https://www.tiktok.com/@' + handleKey));\n  return { json: {\n    updatedAt: serial(profile.scrapedAt),\n    scrapedAtIso: new Date(profile.scrapedAt || Date.now()).toISOString(),\n    profileLink: formula(profileUrl, '@' + handleKey),\n    profileUrl,\n    handle: '@' + handleKey,\n    handleKey,\n    nickname: String(profile.nickname || ''),\n    bio: String(profile.signature || ''),\n    followers: numberOrNull(profile.followers),\n    following: numberOrNull(profile.following),\n    likes: numberOrNull(profile.likes),\n    videosCount: numberOrNull(profile.videosCount),\n    likesPerVideo: numberOrNull(profile.likesPerVideo),\n    followerFollowingRatio: numberOrNull(profile.followerFollowingRatio),\n    verified: stateLabel(profile.verified, 'Verified'),\n    privateAccount: stateLabel(profile.privateAccount, 'Private account'),\n    region: String(profile.region || ''),\n    language: String(profile.language || ''),\n    bioLink: formula(profile.bioLink, 'Open bio link'),\n    bioLinkUrl: String(profile.bioLink || ''),\n    commerceUser: stateLabel(profile.commerceUser, 'Commerce account'),\n    tiktokSeller: stateLabel(profile.tiktokSeller, 'TikTok seller'),\n    isLive: stateLabel(profile.isLive, 'Live now'),\n    userId: String(profile.userId || '')\n  } };\n});"
+      },
+      "id": "cba69eb5-8ef2-43ef-aee5-8d3f31f7dba3",
+      "name": "Normalize Current Creator Metrics",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4384,
+        1392
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1YV806viFdmh0J6m2OuzZXhgDvrrWL8-GqU-DKh5ygKE",
+          "cachedResultName": "FetchCat n8n QA - TikTok Profiles"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1783850914",
+          "cachedResultName": "Current Profiles"
+        },
+        "options": {}
+      },
+      "id": "43db4756-891d-4f46-85e4-3c846e4f3335",
+      "name": "Read Previous Creator Metrics",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4624,
+        1392
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.7,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $('Normalize Current Creator Metrics').all().map((item) => item.json);\nconst previousRows = $input.all().map((item) => item.json || {});\nconst configs = $('Validate Watchlist and Build Actor Input').first().json.configs;\nconst configByHandle = new Map(configs.map((entry) => [entry.handle, entry]));\nconst normalizeHandle = (value) => String(value || '').trim().replace(/^@/, '').toLowerCase();\nconst numberOrNull = (value) => value === '' || value === null || value === undefined || !Number.isFinite(Number(value)) ? null : Number(value);\nconst previousByHandle = new Map();\nfor (const row of previousRows) {\n  const handle = normalizeHandle(row['TikTok handle'] || row.Handle || row.handle);\n  if (handle) previousByHandle.set(handle, row);\n}\nconst round = (value, digits = 2) => value === null || !Number.isFinite(value) ? null : Number(value.toFixed(digits));\nconst rows = current.map((profile) => {\n  const config = configByHandle.get(profile.handleKey) || { label: '', minimumFollowers: 0, maximumFollowers: 1+1234567890, alertGrowthPercent: 5, alertFollowerGain: 1000 };\n  const previous = previousByHandle.get(profile.handleKey);\n  const previousFollowers = numberOrNull(previous?.Followers);\n  const previousLikes = numberOrNull(previous?.['Total likes']);\n  const previousVideos = numberOrNull(previous?.Videos);\n  const baseline = previousFollowers === null;\n  const followerChange = baseline || profile.followers === null ? null : profile.followers - previousFollowers;\n  const followerGrowthPercent = followerChange === null || previousFollowers <= 0 ? null : round((followerChange / previousFollowers) * 100);\n  const likesChange = previousLikes === null || profile.likes === null ? null : profile.likes - previousLikes;\n  const videoChange = previousVideos === null || profile.videosCount === null ? null : profile.videosCount - previousVideos;\n  let qualification = 'Qualified';\n  if (profile.followers === null) qualification = 'Needs review';\n  else if (profile.followers < config.minimumFollowers) qualification = 'Below minimum';\n  else if (profile.followers > config.maximumFollowers) qualification = 'Above maximum';\n  const previousQualification = String(previous?.Qualification || '');\n  const qualificationChanged = Boolean(previousQualification && previousQualification !== qualification);\n  const meaningfulGrowth = (followerGrowthPercent ?? 0) >= config.alertGrowthPercent || (followerChange ?? 0) >= config.alertFollowerGain;\n  const meaningfulDecline = (followerGrowthPercent ?? 0) <= -config.alertGrowthPercent;\n  const shouldAlert = baseline || meaningfulGrowth || meaningfulDecline || qualificationChanged;\n  let changeStatus = 'No material change';\n  if (baseline) changeStatus = 'Baseline created';\n  else if (meaningfulGrowth) changeStatus = 'Growth alert';\n  else if (meaningfulDecline) changeStatus = 'Decline alert';\n  else if (qualificationChanged) changeStatus = 'Qualification changed';\n  return {\n    ...profile,\n    label: config.label,\n    followerChange,\n    followerGrowthPercent,\n    likesChange,\n    videoChange,\n    qualification,\n    changeStatus,\n    shouldAlert,\n    snapshotKey: '@' + profile.handleKey + ' | ' + profile.scrapedAtIso.replace('T', ' ').replace(/\\.\\d{3}Z$/, ' UTC')\n  };\n});\nconst alertRows = rows.filter((row) => row.shouldAlert).sort((a, b) => (b.followerGrowthPercent ?? -Infinity) - (a.followerGrowthPercent ?? -Infinity));\nconst escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst formatNumber = (value) => value === null ? 'unavailable' : Number(value).toLocaleString('en-US');\nconst formatSigned = (value) => (value > 0 ? '+' : '') + formatNumber(value);\nconst formatPercent = (value) => value === null ? 'unavailable' : (value > 0 ? '+' : '') + value + '%';\nconst title = rows.every((row) => row.changeStatus === 'Baseline created') ? 'TikTok creator baseline created' : 'TikTok creator changes';\nconst lines = alertRows.slice(0, 10).map((row, index) => {\n  const label = row.label ? ' | ' + escapeHtml(row.label) : '';\n  const heading = (index + 1) + '. <a href=\"' + escapeHtml(row.profileUrl) + '\"><b>' + escapeHtml(row.handle) + '</b></a>' + label;\n  const totals = formatNumber(row.followers) + ' followers | ' + formatNumber(row.videosCount) + ' videos';\n  if (row.changeStatus === 'Baseline created') {\n    return heading + '\\n' + totals + '\\n' + escapeHtml(row.qualification) + ' | First snapshot saved. Future runs will show changes.';\n  }\n  return heading + '\\n' + totals + '\\nFollower change: ' + formatSigned(row.followerChange) + ' (' + formatPercent(row.followerGrowthPercent) + ') | Video change: ' +\n    formatSigned(row.videoChange) + '\\n' + escapeHtml(row.qualification) + ' | ' + escapeHtml(row.changeStatus);\n});\nconst telegramMessage = '<b>' + title + '</b>\\n\\n' + lines.join('\\n\\n') + (alertRows.length > 10 ? '\\n\\n+' + (alertRows.length - 10) + ' more changed creators in Google Sheets.' : '');\nreturn [{ json: { rows, shouldAlert: alertRows.length > 0, alertCount: alertRows.length, telegramMessage } }];"
+      },
+      "id": "8ba6042b-3999-4928-977d-cd5cc8200541",
+      "name": "Compare Growth and Qualification",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4864,
+        1392
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "tiktok-monitor-alert",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.shouldAlert }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "49d485da-56e1-4c62-a94d-b43d3463dc92",
+      "name": "Has Baseline or Meaningful Changes",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        5104,
+        1392
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "123456789",
+        "text": "={{ $json.telegramMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "6ab9003a-ae0d-4674-b94c-cc4e026e8f1b",
+      "name": "3. Send Creator Changes to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        5344,
+        1232
+      ],
+      "webhookId": "e6653080-43cc-4e51-9837-6d43cdd4f44a",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Compare Growth and Qualification').first().json }];"
+      },
+      "id": "ce145b4e-d5a3-45bd-b58d-3f53a98eebb2",
+      "name": "Prepare Snapshot Rows",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        5584,
+        1392
+      ],
+      "executeOnce": true,
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json.rows.map((row) => ({ json: row }));"
+      },
+      "id": "e829b532-27b6-4d08-a9a9-7556a06a5365",
+      "name": "Expand Snapshot History",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        5824,
+        1392
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1YV806viFdmh0J6m2OuzZXhgDvrrWL8-GqU-DKh5ygKE",
+          "cachedResultName": "FetchCat n8n QA - TikTok Profiles"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1786791067",
+          "cachedResultName": "Snapshot History"
+        },
+        "columns": {
+          "value": {
+            "Name": "={{ $json.nickname }}",
+            "Label": "={{ $json.label }}",
+            "Videos": "={{ $json.videosCount }}",
+            "Profile": "={{ $json.profileLink }}",
+            "Followers": "={{ $json.followers }}",
+            "Snapshot at": "={{ $json.updatedAt }}",
+            "Total likes": "={{ $json.likes }}",
+            "Snapshot key": "={{ $json.snapshotKey }}",
+            "Change status": "={{ $json.changeStatus }}",
+            "Qualification": "={{ $json.qualification }}",
+            "TikTok handle": "={{ $json.handle }}",
+            "Follower change": "={{ $json.followerChange }}",
+            "Follower growth %": "={{ $json.followerGrowthPercent }}",
+            "Total likes change": "={{ $json.likesChange }}",
+            "Video count change": "={{ $json.videoChange }}"
+          },
+          "schema": [
+            {
+              "id": "Snapshot key",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Snapshot key",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Snapshot at",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Snapshot at",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Label",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Label",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Profile",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Profile",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TikTok handle",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "TikTok handle",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Followers",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Followers",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follower change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Follower change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follower growth %",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Follower growth %",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total likes",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Total likes",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total likes change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Total likes change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Videos",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Videos",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video count change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Video count change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qualification",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Qualification",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Change status",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Change status",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ec21eab5-86c4-41ef-9298-3bc93ed4dfaf",
+      "name": "4. Append Snapshot History",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        6064,
+        1392
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Prepare Snapshot Rows').first().json }];"
+      },
+      "id": "6221d8ff-ab34-4c67-8cbe-bdb986ac0407",
+      "name": "Continue After History",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        6304,
+        1392
+      ],
+      "executeOnce": true,
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json.rows.map((row) => ({ json: row }));"
+      },
+      "id": "352435e2-8bb6-4ff4-88e6-8297c43cd637",
+      "name": "Expand Current Profiles",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        6544,
+        1392
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1YV806viFdmh0J6m2OuzZXhgDvrrWL8-GqU-DKh5ygKE",
+          "cachedResultName": "FetchCat n8n QA - TikTok Profiles"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1783850914",
+          "cachedResultName": "Current Profiles"
+        },
+        "columns": {
+          "value": {
+            "Bio": "={{ $json.bio }}",
+            "Name": "={{ $json.nickname }}",
+            "Label": "={{ $json.label }}",
+            "Region": "={{ $json.region }}",
+            "Videos": "={{ $json.videosCount }}",
+            "Profile": "={{ $json.profileLink }}",
+            "Bio link": "={{ $json.bioLink }}",
+            "Language": "={{ $json.language }}",
+            "Verified": "={{ $json.verified }}",
+            "Followers": "={{ $json.followers }}",
+            "Following": "={{ $json.following }}",
+            "Updated at": "={{ $json.updatedAt }}",
+            "Total likes": "={{ $json.likes }}",
+            "Change status": "={{ $json.changeStatus }}",
+            "Qualification": "={{ $json.qualification }}",
+            "TikTok handle": "={{ $json.handle }}",
+            "Follower change": "={{ $json.followerChange }}",
+            "Likes per video": "={{ $json.likesPerVideo }}",
+            "Follower growth %": "={{ $json.followerGrowthPercent }}",
+            "Total likes change": "={{ $json.likesChange }}",
+            "Video count change": "={{ $json.videoChange }}"
+          },
+          "schema": [
+            {
+              "id": "Updated at",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Updated at",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Label",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Label",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Profile",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Profile",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TikTok handle",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "TikTok handle",
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bio",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Bio",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Followers",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Followers",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follower change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Follower change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follower growth %",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Follower growth %",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Following",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Following",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total likes",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Total likes",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total likes change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Total likes change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Videos",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Videos",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video count change",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Video count change",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Likes per video",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "Likes per video",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Verified",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Verified",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Region",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Region",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Language",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Language",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bio link",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Bio link",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qualification",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Qualification",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Change status",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Change status",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "TikTok handle"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "id": "0b3a90f5-a94b-4574-a79a-f6b8e3d9c120",
+      "name": "5. Update Current Profiles",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        6784,
+        1392
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $('Compare Growth and Qualification').first().json;\nreturn [{ json: { status: 'complete', profilesUpdated: result.rows.length, alertsSent: result.alertCount } }];"
+      },
+      "id": "e32ace61-538b-4077-abdb-33f7e1413cc7",
+      "name": "Creator Monitor Complete",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        7024,
+        1392
+      ],
+      "executeOnce": true,
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Monitor TikTok Creator Growth\n\nTrack a reusable TikTok creator or competitor watchlist with `fetch_cat/tiktok-profile-scraper`, Google Sheets, and Telegram. The workflow works on n8n Cloud or self-hosted n8n and uses deterministic thresholds rather than an AI model.\n\n### How it works\n\n1. Starts manually or every Monday at 09:00.\n2. Reads active creators and alert thresholds from the Creators sheet.\n3. Scrapes every profile in one efficient FetchCat Actor run.\n4. Compares current followers, likes, videos, and qualification with the previous snapshot.\n5. Sends a Telegram baseline on the first run and later alerts only for meaningful growth, decline, or qualification changes.\n6. Appends dated history and updates the latest profile table after successful alert delivery.\n\n",
+        "height": 512,
+        "width": 480
+      },
+      "id": "927275ea-6b57-4e5a-a04a-d9ffd0090125",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Load the creator watchlist\n\nStarts manually or weekly and reads active handles, labels, qualification limits, and alert thresholds from Google Sheets.",
+        "height": 560,
+        "width": 512,
+        "color": 7
+      },
+      "id": "fb8d005d-d94f-46b6-ba34-6ec1ed31e58f",
+      "name": "Load Creator Watchlist",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3104,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Run one profile batch\n\nValidates up to 500 unique creators, runs `fetch_cat/tiktok-profile-scraper` once, and downloads the current public profile metrics.",
+        "height": 560,
+        "width": 720,
+        "color": 7
+      },
+      "id": "7dd44632-519f-4db8-9b8d-54ce7628deab",
+      "name": "Run Batch Profile Check",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3616,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Compare growth and qualification\n\nNormalizes current metrics, reads the previous profile table, and calculates follower, likes, video, and qualification changes.",
+        "height": 560,
+        "width": 720,
+        "color": 7
+      },
+      "id": "b31cfd91-2ed6-45dc-922a-87d524dc888f",
+      "name": "Compare with Previous Metrics",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4336,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Route meaningful alerts\n\nSends a readable first-run baseline or significant changes to Telegram. Quiet runs continue without a notification.",
+        "height": 640,
+        "width": 672,
+        "color": 7
+      },
+      "id": "310d0c49-970b-4cec-9167-e5358125a412",
+      "name": "Route Meaningful Alerts",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5056,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Save dated history\n\nAppends one dated row per creator so users can sort, chart, and audit changes over time.",
+        "height": 560,
+        "width": 672,
+        "color": 7
+      },
+      "id": "7464de3b-badc-44a8-ad37-d1b6506daa76",
+      "name": "Save Snapshot History",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5776,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Update the latest profile table\n\nUpserts one current row per handle only after any required Telegram alert succeeds, then returns a concise execution summary.",
+        "height": 560,
+        "width": 672,
+        "color": 7
+      },
+      "id": "3620198b-83d6-46c1-8fcc-8520a6c206b5",
+      "name": "Update Current Profiles",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6496,
+        1024
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "1. Read Creator Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Snapshot Rows": {
+      "main": [
+        [
+          {
+            "node": "Expand Snapshot History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Monday Trigger": {
+      "main": [
+        [
+          {
+            "node": "1. Read Creator Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue After History": {
+      "main": [
+        [
+          {
+            "node": "Expand Current Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Current Profiles": {
+      "main": [
+        [
+          {
+            "node": "5. Update Current Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Snapshot History": {
+      "main": [
+        [
+          {
+            "node": "4. Append Snapshot History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Read Creator Watchlist": {
+      "main": [
+        [
+          {
+            "node": "Validate Watchlist and Build Actor Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Append Snapshot History": {
+      "main": [
+        [
+          {
+            "node": "Continue After History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Update Current Profiles": {
+      "main": [
+        [
+          {
+            "node": "Creator Monitor Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Previous Creator Metrics": {
+      "main": [
+        [
+          {
+            "node": "Compare Growth and Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Growth and Qualification": {
+      "main": [
+        [
+          {
+            "node": "Has Baseline or Meaningful Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Current TikTok Profiles": {
+      "main": [
+        [
+          {
+            "node": "Normalize Current Creator Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Current Creator Metrics": {
+      "main": [
+        [
+          {
+            "node": "Read Previous Creator Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Baseline or Meaningful Changes": {
+      "main": [
+        [
+          {
+            "node": "3. Send Creator Changes to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Snapshot Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Send Creator Changes to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Prepare Snapshot Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Run FetchCat TikTok Profile Scraper": {
+      "main": [
+        [
+          {
+            "node": "Download Current TikTok Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Watchlist and Build Actor Input": {
+      "main": [
+        [
+          {
+            "node": "2. Run FetchCat TikTok Profile Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "34c27273-8ddc-4a16-8a40-e6a98f9887fa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    }
+  ]
+}

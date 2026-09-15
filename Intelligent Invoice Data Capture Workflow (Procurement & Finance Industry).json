@@ -1,0 +1,617 @@
+{
+  "name": "Intelligent Invoice Data Capture Workflow (Procurement & Finance Industry)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1M_Up8SPJyzS8njyZSUfIZb7AEwhQTV9L",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1M_Up8SPJyzS8njyZSUfIZb7AEwhQTV9L",
+          "cachedResultName": "Invoice_Automation"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "d6ff2a71-081b-4b78-84f6-6ebcbb859d06",
+      "name": "Invoice Upload Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        3472,
+        2704
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {}
+      },
+      "id": "f1708230-20ab-4542-85b4-296fa1ad902f",
+      "name": "Download Invoice File",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        3760,
+        2704
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "62461524-fefb-4902-94c2-47d042f63c0e",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "pdf"
+            },
+            {
+              "id": "3bd40f85-ddb6-4fa3-ae37-1c437b560dc1",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "jpg"
+            },
+            {
+              "id": "de8bbd64-7192-47b9-81f4-9dfae70a795f",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "jpeg"
+            },
+            {
+              "id": "e437cdc6-e647-4aa9-8094-a55ba3255bee",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $binary.data.mimeType }}",
+              "rightValue": "png"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "e7c23904-e5d8-4f05-b3b8-f78e661fb9a9",
+      "name": "Validate Supported File Type",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4112,
+        2704
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "K89513988988957"
+            },
+            {
+              "name": "language",
+              "value": "eng"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7d5871b3-ccd2-494b-8b41-83c2f2de7451",
+      "name": "Extract Invoice Text (OCR)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        4512,
+        2688
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9b532364-fdcd-4a75-b97d-27950eb15970",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.IsErroredOnProcessing }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ebe84b6b-733d-4d1c-bb38-8151fe19f4cf",
+      "name": "Check OCR Processing Status",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4848,
+        2688
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an AI invoice extraction assistant.\n\nExtract ALL invoice fields carefully including:\nsupplier name,\ninvoice number,\ninvoice date,\ntax amount,\ntotal amount,\ncurrency,\nand line items.\n\nRules:\n- Return ONLY valid JSON\n- No markdown\n- No explanations\n- Clean OCR mistakes if obvious\n- Keep amounts numeric\n- If value missing return empty string\n\nRequired JSON format:\n\n{\n  \"supplier_name\": \"\",\n  \"invoice_number\": \"\",\n  \"invoice_date\": \"\",\n  \"tax_amount\": \"\",\n  \"total_amount\": \"\",\n  \"currency\": \"\",\n  \"line_items\": [\n    {\n      \"item_name\": \"\",\n      \"quantity\": \"\",\n      \"price\": \"\"\n    }\n  ]\n}\n\nOCR Text:\n{{ $json[\"ParsedResults\"][0][\"ParsedText\"] }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "0fab9eed-fa09-42f3-bac9-adf0638f04b4",
+      "name": "AI Invoice Data Extraction",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "position": [
+        5216,
+        2704
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = JSON.parse($json.content.parts[0].text);\n\nconst validatedData = {\n  supplier_name: raw.supplier_name || \"\",\n  invoice_number: raw.invoice_number || \"\",\n  invoice_date: raw.invoice_date || \"\",\n  tax_amount: Number(raw.tax_amount || 0),\n  total_amount: Number(raw.total_amount || 0),\n  currency: raw.currency || \"INR\",\n  line_items: raw.line_items || [],\n  validation_status: \"valid\",\n  missing_fields: []\n};\n\n// Required field validation\nif (!validatedData.invoice_number) {\n  validatedData.missing_fields.push(\"invoice_number\");\n}\n\nif (!validatedData.supplier_name) {\n  validatedData.missing_fields.push(\"supplier_name\");\n}\n\nif (!validatedData.total_amount) {\n  validatedData.missing_fields.push(\"total_amount\");\n}\n\n// Set validation status\nif (validatedData.missing_fields.length > 0) {\n  validatedData.validation_status = \"manual_review\";\n}\n\nreturn [{ json: validatedData }];"
+      },
+      "id": "4e2efe91-9057-4800-a122-9035fc3e8ddc",
+      "name": "Validate Extracted Invoice Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        5680,
+        2704
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "a7d72835-7408-45bb-9422-be4bef45a9c1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.validation_status }}",
+              "rightValue": "=manual_review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5a3840c8-d5ec-45aa-ac97-939ddd47377f",
+      "name": "Check Missing Invoice Fields",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        5984,
+        2704
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "sendTo": "user@example.com",
+        "subject": "Invoice Needs Manual Review",
+        "emailType": "text",
+        "message": "=Missing Fields:\n{{ JSON.stringify($json.missing_fields) }}\n\nInvoice Number:\n{{ $json.invoice_number }}",
+        "options": {}
+      },
+      "id": "734d5f81-32a6-40ec-a060-c2a37ccdba40",
+      "name": "Send Manual Review Alert",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        6224,
+        2688
+      ],
+      "webhookId": "6e9fc8e5-546f-4a4c-9bf9-62c5911f1a21",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1vtq9OQtSWCZBbEsLuFEfL3tn4VuHRo3sFDe16dO96oU",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vtq9OQtSWCZBbEsLuFEfL3tn4VuHRo3sFDe16dO96oU/edit?usp=drivesdk",
+          "cachedResultName": "Store_Invoice_Data"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vtq9OQtSWCZBbEsLuFEfL3tn4VuHRo3sFDe16dO96oU/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "total_amount": "={{ $json.total_amount }}",
+            "supplier_name": "={{ $json.supplier_name }}",
+            "invoice_number": "={{ $json.invoice_number }}",
+            "validation_status": "={{ $json.validation_status }}"
+          },
+          "schema": [
+            {
+              "id": "supplier_name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "supplier_name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "invoice_number",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "invoice_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_amount",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "total_amount",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "validation_status",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "validation_status",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a79e8275-0b1b-4e77-aa8e-122a177d0d5f",
+      "name": "Store Invoice Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        6256,
+        3120
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "sendTo": "user@example.com",
+        "subject": "=Invoice Processed Successfully - {{ $json.invoice_number }}",
+        "emailType": "text",
+        "message": "=Hello Team,\n\nA new invoice has been successfully processed and stored.\n\nSupplier Name:\n{{ $json.supplier_name }}\n\nInvoice Number:\n{{ $json.invoice_number }}\n\nInvoice Date:\n{{ $json.invoice_date }}\n\nTotal Amount:\n₹{{ $json.total_amount }}\n\nValidation Status:\n{{ $json.validation_status }}\n\nThe invoice data has been stored successfully in Google Sheets.\n\nRegards,\nAI Invoice Automation Workflow\n",
+        "options": {}
+      },
+      "id": "782dab64-b09e-4a22-a108-ef43d1df31f3",
+      "name": "Send Processing Confirmation",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        6608,
+        3120
+      ],
+      "webhookId": "77ee6389-5306-466f-9a6f-584ad1febb35",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "# How It Works\n### This workflow automatically processes invoice files uploaded to Google Drive. Once a PDF, JPG, or PNG invoice is uploaded, the workflow downloads the file, validates the file type, and extracts invoice text using OCR. Gemini AI then converts the extracted text into structured invoice data including supplier name, invoice number, invoice date, taxes, totals, and line items. The workflow validates the extracted data, routes incomplete invoices for manual review, stores validated invoice data in Google Sheets, and finally sends a confirmation email notification. This creates a fully automated AI-powered invoice processing system.\n\n",
+        "height": 352,
+        "width": 1008
+      },
+      "id": "e2bc3c54-adf8-4699-adda-a31c37999fdb",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2224,
+        2400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Invoice Intake & Validation\n\nMonitors Google Drive for new invoice uploads, downloads the file, and validates supported formats (PDF, JPG, JPEG, PNG) before processing.",
+        "height": 384,
+        "width": 928,
+        "color": 7
+      },
+      "id": "2a70ca07-801e-4e53-95d1-ccd8d02afe04",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3408,
+        2512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## OCR Text Extraction & Verification\n\nUses OCR.Space API to extract text from invoice documents and verifies that OCR processing completed successfully before continuing.",
+        "height": 400,
+        "width": 736,
+        "color": 7
+      },
+      "id": "86d0060e-2fed-43b9-98fa-97b98eb81934",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4400,
+        2528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## AI Invoice Understanding\n\nGemini AI converts OCR text into structured invoice data, then validates required fields, amounts, supplier details, and invoice information.",
+        "height": 400,
+        "width": 672,
+        "color": 7
+      },
+      "id": "9dd4ff4b-8b23-4b2d-9f89-67eb1baf7183",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5168,
+        2528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Manual Review Check\n**Node Used:** IF Node + Gmail Node  \nRoutes incomplete invoices for manual review and sends alert emails.",
+        "height": 400,
+        "width": 464,
+        "color": 7
+      },
+      "id": "e5ae47c1-dd07-4473-b998-88071f257ad2",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5920,
+        2528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Storage & Notification\n\nStores validated invoice information in Google Sheets and sends processing confirmation emails with invoice details.",
+        "height": 368,
+        "width": 736,
+        "color": 7
+      },
+      "id": "2a1140a9-5ac5-4ffe-9841-efed5e5aa923",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6128,
+        2976
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Store Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Send Processing Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Invoice File": {
+      "main": [
+        [
+          {
+            "node": "Validate Supported File Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Upload Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Invoice File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Invoice Data Extraction": {
+      "main": [
+        [
+          {
+            "node": "Validate Extracted Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Invoice Text (OCR)": {
+      "main": [
+        [
+          {
+            "node": "Check OCR Processing Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check OCR Processing Status": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Invoice Data Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Missing Invoice Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Manual Review Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Supported File Type": {
+      "main": [
+        [
+          {
+            "node": "Extract Invoice Text (OCR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Extracted Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Check Missing Invoice Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a0f758eb-947a-477f-911f-2981ec1b6bad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "name": "template",
+      "id": "08TQIJECNM5nFlxk",
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z"
+    },
+    {
+      "name": "trello",
+      "id": "01J19IAeCMbwcFBQ",
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z"
+    },
+    {
+      "name": "shopify",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z"
+    },
+    {
+      "name": "gsheet",
+      "id": "SNNwZxvHOLrlx751",
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z"
+    },
+    {
+      "name": "google-sheet",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z"
+    }
+  ]
+}

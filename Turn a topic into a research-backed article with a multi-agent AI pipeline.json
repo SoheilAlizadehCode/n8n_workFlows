@@ -1,0 +1,440 @@
+{
+  "name": "Turn a topic into a research-backed article with a multi-agent AI pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Topic to article",
+        "formDescription": "Give a topic and audience and get a research-backed, SEO-edited article by email.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Topic",
+              "placeholder": "e.g. Benefits of intermittent fasting",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Audience",
+              "placeholder": "e.g. Busy beginners",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Keyword",
+              "placeholder": "e.g. intermittent fasting for beginners"
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Write my article",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Thanks! Your article is being researched and written and will arrive by email shortly."
+            }
+          }
+        }
+      },
+      "id": "a632d29a-1ecb-43ae-ad5e-c56c34cad257",
+      "name": "Article Brief Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -304,
+        1056
+      ],
+      "webhookId": "dfb8b077-98b2-4681-bb11-c8c6a8f4941b",
+      "typeVersion": 2.6
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Research the topic \"{{ $json.Topic }}\" for an audience of {{ $json.Audience }}. Use the Wikipedia tool to gather accurate facts. Produce concise research notes: 5-8 key points, any important numbers, and 2-3 common misconceptions to correct. Do not write the article yet - just the notes.",
+        "options": {
+          "systemMessage": "You are a diligent research assistant. Verify facts with Wikipedia before stating them."
+        }
+      },
+      "id": "9ead0131-78fe-4def-a794-0de07b316d85",
+      "name": "Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -112,
+        1056
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "f485492f-478c-4258-87b8-d57f44e4ea40",
+      "name": "Research Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        -128,
+        1232
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {},
+      "id": "637badf9-d04c-4998-88f8-f26c98f9681f",
+      "name": "Wikipedia",
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "position": [
+        64,
+        1232
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a writer. Using ONLY the research notes below, write a friendly, well-structured article of about 500 words for an audience of {{ $('Article Brief Form').item.json.Audience }} on \"{{ $('Article Brief Form').item.json.Topic }}\". Use short paragraphs and a clear intro and conclusion. Do not invent facts beyond the notes.\n\nResearch notes:\n{{ $json.output }}",
+        "batching": {}
+      },
+      "id": "a4e4add2-5138-4644-8653-1102f0b10f53",
+      "name": "Write Draft with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        224,
+        1056
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "322ff01b-08c2-4f5f-af59-5b652ceddc91",
+      "name": "Writer Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        224,
+        1232
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an SEO editor. Improve the draft below: tighten the writing, fix any awkward phrasing, and naturally work in the keyword \"{{ $('Article Brief Form').item.json.Keyword }}\" where it fits. Then output the finished article, a compelling 55-60 character SEO title on a line starting \"TITLE:\", and a 150-character meta description on a line starting \"META:\".\n\nDraft:\n{{ $json.text }}",
+        "batching": {}
+      },
+      "id": "774bcd4c-fada-4c7f-b672-23d090a5d346",
+      "name": "Edit and Optimise with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        528,
+        1056
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "57e24ebb-8606-4019-be80-529676d5bf72",
+      "name": "Editor Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        528,
+        1232
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const out = String($json.text || '');\nconst t = out.match(/TITLE:\\s*(.*)$/im);\nconst m = out.match(/META:\\s*(.*)$/im);\nconst title = t ? t[1].trim() : '';\nconst meta = m ? m[1].trim() : '';\nconst body = out.replace(/TITLE:\\s*.*$/im, '').replace(/META:\\s*.*$/im, '').trim();\nconst f = $('Article Brief Form').item.json;\nreturn { email: f['Your email'], topic: f.Topic, title: title, meta: meta, article: body };"
+      },
+      "id": "8b54af33-367e-40c0-8acf-92adbc113bbe",
+      "name": "Split Article, Title and Meta",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        880,
+        1056
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Select your spreadsheet"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Articles"
+        }
+      },
+      "id": "e9a204ef-36c9-49df-a182-0e73307e190e",
+      "name": "Log Article",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1104,
+        1056
+      ],
+      "typeVersion": 4.7
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Split Article, Title and Meta\").item.json.email }}",
+        "subject": "={{ \"Your article: \" + $(\"Split Article, Title and Meta\").item.json.title }}",
+        "emailType": "text",
+        "message": "={{ \"TITLE: \" + $(\"Split Article, Title and Meta\").item.json.title + \"\\nMETA: \" + $(\"Split Article, Title and Meta\").item.json.meta + \"\\n\\n\" + $(\"Split Article, Title and Meta\").item.json.article }}",
+        "options": {}
+      },
+      "id": "a2bc6337-67a8-413d-854f-6782e2cbb383",
+      "name": "Email the Article",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1312,
+        1056
+      ],
+      "webhookId": "df1bb5e3-b7e1-4efc-9ceb-a7567b32e149",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## Turn a topic into a research-backed article with a multi-agent AI pipeline\n\n### How it works\nInstead of one prompt doing everything, this template splits the job across three specialised AI steps, like a real editorial team. Submit a topic and audience in the built-in form. First an AI Agent researches the topic, using the Wikipedia tool to gather and verify facts, and produces structured notes. Then a Basic LLM Chain (the writer) turns only those notes into a friendly 500-word draft, so it cannot invent facts. Finally a second Basic LLM Chain (the SEO editor) tightens the draft, works in your keyword, and adds an SEO title and meta description. The finished piece is logged to Google Sheets and emailed to you.\n",
+        "height": 392,
+        "width": 552
+      },
+      "id": "e8fb5ec0-abc3-4aeb-a220-81b13a7f24e7",
+      "name": "Overview Sticky",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -992,
+        992
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Writer & SEO editor (Basic LLM Chains)\nOne chain writes the draft from the notes only; a second chain edits it and adds an SEO title and meta.",
+        "height": 652,
+        "width": 616,
+        "color": 7
+      },
+      "id": "f304940b-554c-465e-8030-99b0bc154232",
+      "name": "S2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        176,
+        848
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Log & deliver\nSplit out the title and meta, log the article to Sheets and email the finished piece.",
+        "height": 652,
+        "width": 660,
+        "color": 7
+      },
+      "id": "ebc70786-204f-4f7e-8463-85dca1cd08c6",
+      "name": "S3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        816,
+        848
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Research Agent\nAn AI Agent gathers and verifies facts with the Wikipedia tool and writes structured notes.",
+        "height": 652,
+        "width": 564,
+        "color": 7
+      },
+      "id": "eb5de451-7f4f-4a35-8a45-7a025afcbc08",
+      "name": "S1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        848
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Article": {
+      "main": [
+        [
+          {
+            "node": "Email the Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editor Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Edit and Optimise with Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Draft with Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Write Draft with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Article Brief Form": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Draft with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Edit and Optimise with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit and Optimise with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Split Article, Title and Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Article, Title and Meta": {
+      "main": [
+        [
+          {
+            "node": "Log Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "573107de-1603-47b6-b286-30ac1e2a5682",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z",
+      "id": "TQQNUlAM8h9e8zRY",
+      "name": "Template"
+    }
+  ]
+}

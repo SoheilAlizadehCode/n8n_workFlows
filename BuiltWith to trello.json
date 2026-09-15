@@ -1,0 +1,255 @@
+{
+  "name": "BuiltWith to trello",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc61d3be-8116-4f8f-af91-f3ba371710af",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        832,
+        2496
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1Hs9LcBpC-kaGgD_QjkkqBEJzDeAd85RW_L1fXTYEdCA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Hs9LcBpC-kaGgD_QjkkqBEJzDeAd85RW_L1fXTYEdCA/edit?usp=drivesdk",
+          "cachedResultName": "BuiltWith Domain"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Hs9LcBpC-kaGgD_QjkkqBEJzDeAd85RW_L1fXTYEdCA/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "id": "161cea8b-210c-436d-aa7e-b980da1ec97b",
+      "name": "Read Domains from Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1056,
+        2496
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "url": "https://api.builtwith.com/v21/api.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "KEY",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "LOOKUP",
+              "value": "={{ $json.Domain }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "17dcc449-24e6-46f0-96d3-ae812233dffc",
+      "name": "Fetch detail via BuiltWith",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1312,
+        2496
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $json.Results?.[0];\nconst domain = result?.Lookup || null;\nconst path = result?.Result?.Paths?.[0];\nconst url = path?.Url || null;\n\nlet extracted = null;\n\n// Loop through Groups to find the first available Tech entry\nfor (const group of path?.Groups || []) {\n  const category = group.Name;\n  const tech = group.Tech?.[0];\n  \n  if (tech) {\n    extracted = {\n      Technology: tech.Name,\n      Category: category,\n      \"First Detected\": tech.FirstDetected,\n      \"Last Detected\": tech.LastDetected,\n      Domain: domain,\n      URL: url\n    };\n    break; // Stop after first match\n  }\n}\n\nreturn extracted ? [extracted] : [];\n"
+      },
+      "id": "0cda8ab8-27ac-46dd-9cc7-27dedfecf969",
+      "name": "Extract Tech Stack Info",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1536,
+        2496
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "# 📊 **Section 3: Create Trello Cards**\n\n\n\n### 🔹 What it does:\n\n* Takes the extracted data and **create trello cards for scan**.\n* Fills in columns like:\n\n  * `Technology`\n  * `Category`\n  * `First Detected`\n  * `Last Detected`\n  * `URL`\n\n\n",
+        "height": 560,
+        "width": 360,
+        "color": 5
+      },
+      "id": "a4b8c3a8-89fb-467e-a11e-37e7cc1cbd69",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1728,
+        2128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🌍 **Section 2: Tech Stack Lookup**\n\n\n### 🔹 What it does:\n\n* For each domain, it sends an HTTP GET request to the **BuiltWith API** to fetch that site's detected technologies.\n* The **Code (Function)** node then parses the complex response and extracts only what you care about:\n\n  * `Technology` 🛠️\n  * `Category` 📦\n  * `First Detected` 🕐\n  * `Last Detected` ⌛\n  * `Domain` 🌐\n  * `URL` 🔗\n\n\n",
+        "height": 588,
+        "width": 440,
+        "color": 7
+      },
+      "id": "4b0b066b-e9d6-4a3c-87de-dcd001433ace",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        2096
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🧩 **Section 1: Input Collection**\n\n\n\n### 🔹 What it does:\n\n* The workflow starts **when you click \"Test workflow\"** (manual trigger). This is useful for testing before setting up a schedule.\n* Then it connects to a **Google Sheet**, which contains a list of domains (e.g., `webflow.com`, `shopify.com`) you want to analyze.\n\n\n",
+        "height": 520,
+        "width": 420,
+        "color": 6
+      },
+      "id": "11c2f593-ddc3-4b22-844e-01f7247437eb",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        2176
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "name": "Scan BuiltWith Results",
+        "description": "=Domain: {{ $json.Domain }}\nTechnology: {{ $json.Technology }}\nCategory: {{ $json.Category }}\nFirst Detected: {{ $json['First Detected'] }}\nLast Detected: {{ $json['Last Detected'] }}\nURL: {{ $json.URL }}",
+        "additionalFields": {
+          "due": "",
+          "idMembers": ""
+        }
+      },
+      "id": "f05d4447-1fe4-42ee-ac65-2d07c0f90fc7",
+      "name": "Trello",
+      "type": "n8n-nodes-base.trello",
+      "position": [
+        1872,
+        2496
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {
+    "Fetch detail via BuiltWith": [
+      {
+        "json": {
+          "Results": [
+            {
+              "Lookup": "webflow.com",
+              "Result": {
+                "Paths": [
+                  {
+                    "Url": "http://webflow.com",
+                    "Groups": [
+                      {
+                        "Name": "Web Hosting Providers",
+                        "Tech": [
+                          {
+                            "Name": "Amazon Web Services",
+                            "LastDetected": "2025-06-06",
+                            "FirstDetected": "2022-01-10"
+                          }
+                        ]
+                      },
+                      {
+                        "Name": "JavaScript Libraries",
+                        "Tech": [
+                          {
+                            "Name": "React",
+                            "LastDetected": "2025-06-06",
+                            "FirstDetected": "2021-05-01"
+                          },
+                          {
+                            "Name": "jQuery",
+                            "LastDetected": "2024-12-01",
+                            "FirstDetected": "2020-09-15"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Domains from Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Tech Stack Info": {
+      "main": [
+        [
+          {
+            "node": "Trello",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch detail via BuiltWith": {
+      "main": [
+        [
+          {
+            "node": "Extract Tech Stack Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Domains from Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Fetch detail via BuiltWith",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3994981c-383c-4050-91a8-91973e153726",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": []
+}

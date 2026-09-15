@@ -1,0 +1,598 @@
+{
+  "name": "Generate SEO audit reports from a web form with GPT-5 mini and Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Free AI SEO Audit",
+        "formDescription": "Your landing page is leaking traffic. Paste your URL and get a full on-page SEO audit in your inbox in minutes.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Landing Page URL",
+              "placeholder": "https://example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email",
+              "placeholder": "user@example.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Get my free SEO audit",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Your SEO audit is on its way! Check your inbox in the next few minutes."
+            }
+          },
+          "ignoreBots": true
+        }
+      },
+      "id": "8909c7ea-5ee2-4b56-a073-c5d55a0587e7",
+      "name": "Audit request form",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        1280,
+        1344
+      ],
+      "webhookId": "0d6b5d0f-801e-4163-9573-a7730cdbd4cb",
+      "typeVersion": 2.6
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-page-url",
+              "name": "page_url",
+              "type": "string",
+              "value": "={{ $json['Landing Page URL'] }}"
+            },
+            {
+              "id": "cfg-recipient",
+              "name": "recipient_email",
+              "type": "string",
+              "value": "={{ $json['Your Email'] }}"
+            },
+            {
+              "id": "cfg-model",
+              "name": "openai_model",
+              "type": "string",
+              "value": "gpt-5-mini"
+            },
+            {
+              "id": "cfg-language",
+              "name": "output_language",
+              "type": "string",
+              "value": "English"
+            },
+            {
+              "id": "cfg-reco-count",
+              "name": "number_of_recommendations",
+              "type": "number",
+              "value": 10
+            },
+            {
+              "id": "cfg-max-chars",
+              "name": "max_html_chars",
+              "type": "number",
+              "value": 100000
+            },
+            {
+              "id": "cfg-subject",
+              "name": "email_subject_prefix",
+              "type": "string",
+              "value": "Your free on-page SEO audit"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "843eba7d-9cd3-463d-8279-e491620c3732",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1472,
+        1344
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.page_url }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 10
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "3cc63659-6ab8-43ea-8236-4c5a63a40688",
+      "name": "Scrape landing page",
+      "type": "n8n-nodes-base.httpRequest",
+      "maxTries": 2,
+      "position": [
+        1712,
+        1360
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a world-class technical SEO expert.\n\nAnalyze the raw HTML source code below and produce a structured on-page technical SEO audit written in {{ $(\"Configuration\").first().json.output_language }}.\n\nStart your answer with the heading \"## Technical SEO audit\".\n\nOrganize your findings into 3 sections:\n- Critical issues (must be fixed immediately)\n- Quick wins (easy fixes with big impact)\n- Opportunities for improvement (more effort, real upside)\n\nCheck at minimum: title tag, meta description, heading hierarchy, canonical tag, robots meta, Open Graph tags, structured data (JSON-LD), image alt attributes, internal links, mobile viewport, page weight signals.\n\nFinish with a prioritized action plan containing the top {{ $(\"Configuration\").first().json.number_of_recommendations }} recommendations.\n\nOutput clean Markdown only. Do not include any introductory or closing text.\n\nHTML source code:\n{{ $json.data.slice(0, $(\"Configuration\").first().json.max_html_chars) }}",
+        "batching": {}
+      },
+      "id": "4c4ffc1f-61e7-47ed-8cd3-d514e7185e7b",
+      "name": "Run technical SEO audit",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2160,
+        1088
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Configuration\").first().json.openai_model }}"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "6576c8dc-041f-4e27-b375-8b3d20a6e4b3",
+      "name": "OpenAI model (technical)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        2160,
+        1248
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {},
+      "id": "4bff2754-b8aa-49ef-aecb-ce0ad004f4e2",
+      "name": "Combine both audits",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2512,
+        1296
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "page_title",
+              "cssSelector": "title"
+            },
+            {
+              "key": "meta_description",
+              "cssSelector": "meta[name=\"description\"]",
+              "returnValue": "attribute",
+              "attribute": "content"
+            },
+            {
+              "key": "h1_headings",
+              "cssSelector": "h1",
+              "returnArray": true
+            },
+            {
+              "key": "body_text",
+              "cssSelector": "body",
+              "skipSelectors": "script,style,noscript,svg,iframe"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true,
+          "cleanUpText": true
+        }
+      },
+      "id": "bf377232-b491-442d-9c1f-f1c2d4b2c908",
+      "name": "Extract page content",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        1920,
+        1472
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a world-class SEO content strategist.\n\nWrite a structured on-page content SEO audit in {{ $(\"Configuration\").first().json.output_language }} for the page below.\n\nStart your answer with the heading \"## Content SEO audit\".\n\nCover:\n- Content quality and search intent match\n- Primary and secondary keywords (current targeting and gaps)\n- Readability assessment\n- Headings and content structure\n- Trust and conversion signals\n\nFinish with the top {{ $(\"Configuration\").first().json.number_of_recommendations }} prioritized, actionable recommendations as bullet points.\n\nOutput clean Markdown only. Do not include any introductory or closing text.\n\nPage title: {{ $json.page_title }}\nMeta description: {{ $json.meta_description }}\nH1 headings: {{ $json.h1_headings }}\n\nPage content:\n{{ ($json.body_text || \"\").slice(0, $(\"Configuration\").first().json.max_html_chars) }}",
+        "batching": {}
+      },
+      "id": "842aa651-45bd-401e-a95e-4390275d2077",
+      "name": "Run content SEO audit",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2144,
+        1472
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Configuration\").first().json.openai_model }}"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "4b80c083-c01c-4eb9-8ace-ec7086fd6486",
+      "name": "OpenAI model (content)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        2224,
+        1696
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ab2f31c-4b93-4778-846a-3df98e88e02e",
+      "name": "Aggregate audit sections",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        2736,
+        1296
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "=# On-page SEO audit\n\nAudited page: {{ $(\"Configuration\").first().json.page_url }}\n\n{{ $json.text[0] }}\n\n---\n\n{{ $json.text[1] }}",
+        "options": {
+          "simpleLineBreaks": false,
+          "tables": true
+        }
+      },
+      "id": "a52f51b5-7c81-4106-94d2-ad195cf35d45",
+      "name": "Build HTML report",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        2960,
+        1296
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Configuration\").first().json.recipient_email }}",
+        "subject": "={{ $(\"Configuration\").first().json.email_subject_prefix }} - {{ $(\"Configuration\").first().json.page_url }}",
+        "message": "={{ $json.data }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "589cde2d-f577-46ab-8482-ce5dea740958",
+      "name": "Email the audit report",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        3200,
+        1296
+      ],
+      "webhookId": "72927899-b168-474e-a11b-e5921ff4a405",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "SEO audit leads"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "c40daa7b-f676-452e-adb2-b23bfa89ea37",
+      "name": "Log the lead in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3408,
+        1296
+      ],
+      "typeVersion": 4.7,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "# Generate SEO audit reports from a web form with GPT-5 mini and Gmail\n# 📥  [Open full documentation on Notion](https://automatisation.notion.site/Course-Generate-SEO-audit-reports-from-a-web-form-with-GPT-5-mini-and-Gmail-39d3d6550fd9815e99dfc72a5e05e0ea)\n\n## How it works\n1. A visitor submits their landing page URL and email in a hosted n8n form.\n2. The workflow fetches the raw HTML of the page and extracts the readable content (title, meta description, headings, body text).\n3. Two AI chains run on the same page: a technical on-page audit on the HTML source, and a content and keyword audit on the extracted text.\n4. Both audits are combined into a single HTML report and emailed to the visitor with Gmail.\n5. Every request is logged as a lead in Google Sheets (date, URL, email), turning the audit into a lead magnet.\n\n",
+        "height": 476,
+        "width": 640,
+        "color": 4
+      },
+      "id": "11c9eda2-b5c0-4745-b07c-b333d4e2cef0",
+      "name": "Sticky Note 674dca4c",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Lead capture form\nThe visitor enters a landing page URL and their email. All adjustable variables live in the \"Configuration\" node - edit them there only.",
+        "height": 320,
+        "width": 460,
+        "color": 7
+      },
+      "id": "600ee77d-afe4-4119-9499-66c27532bd8c",
+      "name": "Sticky Note f7d10c04",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1184,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Scrape and extract\nFetches the raw HTML of the page, then extracts the title, meta description, H1 headings and clean body text for the content audit.",
+        "height": 520,
+        "width": 420,
+        "color": 7
+      },
+      "id": "69df5370-ecc7-4f5d-a3d1-b884aa2504a2",
+      "name": "Sticky Note cadb0180",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1664,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. AI SEO audits\nSelect your OpenAI credential on both model nodes. One chain audits the technical HTML, the other audits the content and keywords. One run costs a few cents with gpt-5-mini.",
+        "height": 980,
+        "width": 330,
+        "color": 7
+      },
+      "id": "3de47932-f247-4bbb-8874-093efafe3543",
+      "name": "Sticky Note ed725e9c",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2112,
+        864
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 4. Report and lead logging\nCombines both audits into one HTML email sent to the visitor with Gmail, then logs the lead (date, URL, email) in Google Sheets.",
+        "height": 320,
+        "width": 1140,
+        "color": 7
+      },
+      "id": "e6bd26f1-2519-4885-a17f-b877d88c1cbd",
+      "name": "Sticky Note 8798853f",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2464,
+        1152
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Scrape landing page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML report": {
+      "main": [
+        [
+          {
+            "node": "Email the audit report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit request form": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine both audits": {
+      "main": [
+        [
+          {
+            "node": "Aggregate audit sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape landing page": {
+      "main": [
+        [
+          {
+            "node": "Run technical SEO audit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract page content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract page content": {
+      "main": [
+        [
+          {
+            "node": "Run content SEO audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run content SEO audit": {
+      "main": [
+        [
+          {
+            "node": "Combine both audits",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Email the audit report": {
+      "main": [
+        [
+          {
+            "node": "Log the lead in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI model (content)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Run content SEO audit",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run technical SEO audit": {
+      "main": [
+        [
+          {
+            "node": "Combine both audits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate audit sections": {
+      "main": [
+        [
+          {
+            "node": "Build HTML report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI model (technical)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Run technical SEO audit",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0d99a71c-e6e3-4530-a7e3-5f4b88aa19aa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    }
+  ]
+}

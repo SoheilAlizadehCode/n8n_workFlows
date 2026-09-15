@@ -1,0 +1,2478 @@
+{
+  "name": "Track LinkedIn profile changes and send Slack notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "49d03a4f-fcba-4f56-bab9-c0b69fa089a4",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.url }}",
+              "rightValue": "="
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "a093d16b-5b47-4185-b7bb-d8ff31ef2c10",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1824,
+        528
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit#gid=0",
+          "cachedResultName": "Profiles"
+        },
+        "options": {}
+      },
+      "id": "55b468a6-c555-4655-bd19-49a4bea4f33b",
+      "name": "Read Profiles List",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -816,
+        1216
+      ],
+      "typeVersion": 4.5,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "93ed7045-0dae-4d88-9fe8-64df5956fc41",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c45bc03-879e-45ac-888d-e093bfe510bc",
+      "name": "Filter New Profiles",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -592,
+        1216
+      ],
+      "typeVersion": 2.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.ghostgenius.fr/v2/profile",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Filter New Profiles').item.json.LinkedIn }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2500
+            }
+          }
+        }
+      },
+      "id": "3fed1cb5-1f3c-499f-bf83-207a678dcae2",
+      "name": "Scrape New Profiles",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        1216
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit#gid=0",
+          "cachedResultName": "Profiles"
+        },
+        "options": {}
+      },
+      "id": "74e642e1-cccd-48df-b7d3-91446a9d19f6",
+      "name": "Read Existing Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        736,
+        1216
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "url": "https://api.ghostgenius.fr/v2/profile",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Read Existing Data').item.json.LinkedIn }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2500
+            }
+          }
+        }
+      },
+      "id": "a7aa7fe2-ca78-42fc-aab2-e28f20587629",
+      "name": "Scrape Current Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1136,
+        1216
+      ],
+      "executeOnce": false,
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "871b00da-26ee-4561-8d01-44487789a53f",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.first_name }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json.Firstname }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Firstname"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "60c00e9c-9baf-4cc7-a056-1d7bd395b50e",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.last_name }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json.Lastname }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Lastname"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "baa12563-6083-4795-a941-8b564835585a",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.headline }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json.Tagline }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Tagline"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ea2ee3a7-d9f9-4031-9a94-8391dbd3aaf3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.summary }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json.Summary }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Summary"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f8b1a1bb-ea43-4bde-ac33-7b112cad3a11",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "=Company name: {{ $json.experiences[0].company.name }}\nCompany url: {{ $json.experiences[0].company.url }}\nPosition: {{ $json.experiences[0].position }}\nDescription: {{ $json.experiences[0].description }} \nLocation: {{ $json.experiences[0].location }}\nStart: {{ $json.experiences[0].start }}\nEnd: {{ $json.experiences[0].end }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json['Latest experience'] }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Latest experience"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "036d2d87-ecc0-4808-8e3e-93c2d21fc111",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.is_open_to_work }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json['Open to work?'] }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Open to work?"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "d2c5e3dc-765c-405a-b938-80f8107e8f0b",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.is_hiring }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json['Hiring?'] }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Hiring?"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "82003e54-3790-4680-8240-e496de2ec94c",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $('Scrape Current Posts').item.json.data[0].url }}",
+                    "rightValue": "={{ $('Read Existing Data').item.json['Latest Post'] }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Latest Post "
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "id": "96d0fe74-fa53-485d-926a-1ff0a91e9e66",
+      "name": "Detect Changes",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1392,
+        1120
+      ],
+      "typeVersion": 3.2,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 First name change detected\n🔄 {{ $('Read Existing Data').item.json.Firstname }} → {{ $('Scrape Current Data').item.json.first_name }} \n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "8caef2dd-e24f-4f71-914c-e172730fb186",
+      "name": "Alert First Name",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        544
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Firstname": "={{ $('Scrape Current Data').item.json.first_name }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "fbdd63b1-0b9a-4b1b-96a6-4451010b0fed",
+      "name": "Update First Name",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        544
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Last name change detected\n🔄 {{ $('Read Existing Data').item.json.Lastname }} → {{ $('Scrape Current Data').item.json.last_name }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "5643bf5c-91aa-46e5-a761-7380ac4ee4cd",
+      "name": "Alert Last Name",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        768
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Lastname": "={{ $('Scrape Current Data').item.json.last_name }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3e7736dc-0895-4c66-b5d5-3529ce8f1666",
+      "name": "Update Last Name",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        768
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Tagline change detected\n🔄 {{ $('Read Existing Data').item.json.Tagline }} → {{ $('Scrape Current Data').item.json.headline }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "398334f5-3965-46d6-9b02-0947bdb9ce80",
+      "name": "Alert Tagline",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        976
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Tagline": "={{ $('Scrape Current Data').item.json.headline }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c34abc25-f7cf-487d-be96-76162a0a8e33",
+      "name": "Update Tagline",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        976
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Summary change detected\n🔄 {{ $('Read Existing Data').item.json.Summary }} → {{ $('Scrape Current Data').item.json.summary }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "5d1e73aa-32fc-4754-9252-287dd4332137",
+      "name": "Alert Summary",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        1200
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Summary": "={{ $('Scrape Current Data').item.json.summary }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e6277e40-7d50-4ded-af76-25a6d6a3bb0d",
+      "name": "Update Summary",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        1200
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Latest experience change detected\n🔄 {{ $('Read Existing Data').item.json['Latest experience'] }} \n→ \nCompany name: {{ $json.experiences[0].company.name }}\nCompany url: {{ $json.experiences[0].company.url }}\nPosition: {{ $json.experiences[0].position }}\nDescription: {{ $json.experiences[0].description }} \nLocation: {{ $json.experiences[0].location }}\nStart: {{ $json.experiences[0].start }}\nEnd: {{ $json.experiences[0].end }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "77a00891-6430-444c-8999-c186406d5455",
+      "name": "Alert Experience",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        1424
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Latest experience": "=Company name: {{ $('Scrape Current Data').item.json.experiences[0].company.name }}\nCompany url: {{ $('Scrape Current Data').item.json.experiences[0].company.url }}\nPosition: {{ $('Scrape Current Data').item.json.experiences[0].position }}\nDescription: {{ $('Scrape Current Data').item.json.experiences[0].description }}\nLocation: {{ $('Scrape Current Data').item.json.experiences[0].location }}\nStart: {{ $('Scrape Current Data').item.json.experiences[0].start }}\nEnd: {{ $('Scrape Current Data').item.json.experiences[0].end }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b5eab26e-1402-44b4-b049-42364bdd8b76",
+      "name": "Update Experience",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        1424
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Open to work? change detected\n🔄 {{ $('Read Existing Data').item.json['Open to work?'] }} → {{ $('Scrape Current Data').item.json.is_open_to_work }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "6d844160-98ce-45b2-bbd9-48d9cfd4acc7",
+      "name": "Alert Open to Work",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        1664
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Open to work?": "={{ $('Scrape Current Data').item.json.is_open_to_work }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1d7f3038-a304-4593-a3b5-2e379f472ea1",
+      "name": "Update Open to Work",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        1664
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 Hiring? change detected\n🔄 {{ $('Read Existing Data').item.json['Hiring?'] }} → {{ $('Scrape Current Data').item.json.is_hiring }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "1d981138-56ac-4ced-b750-ef57bfe6a67b",
+      "name": "Alert Hiring Status",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        1888
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Hiring?": "={{ $('Scrape Current Data').item.json.is_hiring }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b8391519-fc2c-4aa5-8e81-0c4ae5e458a9",
+      "name": "Update Hiring Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        1888
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {},
+      "id": "307cdef9-ba31-42f8-98bc-118e3926dab3",
+      "name": "No Change ",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        2144,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $json.id }}",
+            "Hiring?": "={{ $json.is_hiring }}",
+            "Summary": "={{ $json.summary }}",
+            "Tagline": "={{ $json.headline }}",
+            "Lastname": "={{ $json.last_name }}",
+            "LinkedIn": "={{ $('Filter New Profiles').item.json.LinkedIn }}",
+            "Firstname": "={{ $json.first_name }}",
+            "Latest Post": "={{ $('Scrape New Profiles Posts').item.json.data[0].url }}",
+            "Open to work?": "={{ $json.is_open_to_work }}",
+            "Latest experience": "=Company name: {{ $json.experiences[0].company.name }}\nCompany url: {{ $json.experiences[0].company.url }}\nPosition: {{ $json.experiences[0].position }}\nDescription: {{ $json.experiences[0].description }} \nLocation: {{ $json.experiences[0].location }}\nStart: {{ $json.experiences[0].start }}\nEnd: {{ $json.experiences[0].end }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest Post",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Latest Post",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "LinkedIn"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1a7a4403-f887-4f94-a063-b28baed38ee7",
+      "name": "Update New Profiles",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        448,
+        1360
+      ],
+      "typeVersion": 4.5,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger & Check New Profiles ",
+        "height": 440,
+        "width": 1700,
+        "color": 6
+      },
+      "id": "93ac8690-7419-40f8-bc2a-7e743651fdc2",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1104,
+        1088
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "309bf288-c11c-4593-8ee0-12f1b396717d",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1040,
+        1216
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "8308dbf3-e1ef-4b89-8e02-def1126eabcf",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        -160,
+        1216
+      ],
+      "webhookId": "0560eb04-be9d-47cb-b27e-76c1333d5519",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.ghostgenius.fr/v2/profile/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.LinkedIn }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "d55944c4-f754-42a9-bd7b-66c1131465d7",
+      "name": "Scrape New Profiles Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -384,
+        1216
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "932e93ca-de00-48b7-add1-90e2c4c5dc89",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.error }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "93340dd0-10cd-4aa0-ab03-e2e1407aa7ac",
+      "name": "If No New Profile",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        272,
+        1216
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "url": "https://api.ghostgenius.fr/v2/profile/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.LinkedIn }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "d11b2c12-22b0-4cfb-8abb-520d91b9e1be",
+      "name": "Scrape Current Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        928,
+        1216
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08RP1DL69M",
+          "cachedResultName": "demo"
+        },
+        "text": "=🚨 New Post detected\nHere's the new post: {{ $('Scrape Current Posts').item.json.data[0].url }}\n----------------------------------------------------------------------------------------\nLinkedIn: {{ $('Read Existing Data').item.json.LinkedIn }}\nRow: {{ $('Read Existing Data').item.json.row_number }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "2d6f0657-e369-45c0-b8e2-e68700027b68",
+      "name": "Alert Post",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        2144,
+        2096
+      ],
+      "webhookId": "68cbad6c-f951-4b5b-bb52-ed356e92d12b",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMDpgl3zVFggyfIS3AaLovuO4mc8hv5cQ0lu9kzlTZw/edit?usp=drivesdk",
+          "cachedResultName": "Copy of Profiles Tracker"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fGlKRGQrY0rW41DQ7GdtBh0QBR4P8Npbyr_k00DF_5Q/edit#gid=0",
+          "cachedResultName": "Feuille 1"
+        },
+        "columns": {
+          "value": {
+            "ID": "={{ $('Scrape Current Data').item.json.id }}",
+            "Latest Post": "={{ $('Scrape Current Posts').item.json.data[0].url }}"
+          },
+          "schema": [
+            {
+              "id": "Firstname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Firstname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lastname",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Lastname",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "LinkedIn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tagline",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Tagline",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest experience",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Latest experience",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Open to work?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Open to work?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hiring?",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Hiring?",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latest Post",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Latest Post",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "067951f8-1661-4811-9866-e704a3e0c130",
+      "name": "Update Post",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2368,
+        2096
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "content": "## Scrape Current Data",
+        "height": 440,
+        "width": 620,
+        "color": 4
+      },
+      "id": "031ed351-f578-4715-b9b8-4cb787361823",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        1088
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Track if there is a change, Alert and Update",
+        "height": 1940,
+        "width": 1280,
+        "color": 5
+      },
+      "id": "b5da742e-1cc6-4d2a-a757-a1a8923abd50",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        336
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "No Change ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert First Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Scrape New Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Post": {
+      "main": [
+        [
+          {
+            "node": "Update Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Summary": {
+      "main": [
+        [
+          {
+            "node": "Update Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Tagline": {
+      "main": [
+        [
+          {
+            "node": "Update Tagline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Profiles List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Changes": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Last Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Tagline",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Experience",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Open to Work",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Hiring Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Last Name": {
+      "main": [
+        [
+          {
+            "node": "Update Last Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Experience": {
+      "main": [
+        [
+          {
+            "node": "Update Experience",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert First Name": {
+      "main": [
+        [
+          {
+            "node": "Update First Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If No New Profile": {
+      "main": [
+        [
+          {
+            "node": "Read Existing Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update New Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Open to Work": {
+      "main": [
+        [
+          {
+            "node": "Update Open to Work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Existing Data": {
+      "main": [
+        [
+          {
+            "node": "Scrape Current Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Profiles List": {
+      "main": [
+        [
+          {
+            "node": "Filter New Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Hiring Status": {
+      "main": [
+        [
+          {
+            "node": "Update Hiring Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New Profiles": {
+      "main": [
+        [
+          {
+            "node": "Scrape New Profiles Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Current Data": {
+      "main": [
+        [
+          {
+            "node": "Detect Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape New Profiles": {
+      "main": [
+        [
+          {
+            "node": "If No New Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update New Profiles": {
+      "main": [
+        [
+          {
+            "node": "Read Existing Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Current Posts": {
+      "main": [
+        [
+          {
+            "node": "Scrape Current Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape New Profiles Posts": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2d776d8c-0527-4411-a252-157daab64d5a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z",
+      "id": "TQQNUlAM8h9e8zRY",
+      "name": "Template"
+    }
+  ]
+}

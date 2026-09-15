@@ -1,0 +1,335 @@
+{
+  "name": "Issue gapless sequential invoice and ticket numbers from a Data Table",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "next-number",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4f754723-7010-49aa-ac26-3c1aadf429c7",
+      "name": "When Number Is Requested",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        1536,
+        1216
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "c6c6bb2b-9e16-4677-b706-8b3f55338e14"
+    },
+    {
+      "parameters": {
+        "jsCode": "var items = $input.all();\nvar src = items.length ? items[0].json : {};\nvar body = (src.body && typeof src.body === 'object') ? src.body : {};\nvar query = (src.query && typeof src.query === 'object') ? src.query : {};\nfunction pick(name, fallback){\n  if (body[name] !== undefined && body[name] !== null && body[name] !== '') return body[name];\n  if (query[name] !== undefined && query[name] !== null && query[name] !== '') return query[name];\n  if (src[name] !== undefined && src[name] !== null && src[name] !== '') return src[name];\n  return fallback;\n}\nvar keyRe = new RegExp('^[a-z0-9_-]{1,50}$');\nvar key = String(pick('sequence_key', 'invoice')).trim().toLowerCase();\nif (!keyRe.test(key)) key = 'invoice';\nvar prefixRe = new RegExp('^[A-Za-z0-9_-]{0,12}$');\nvar prefix = String(pick('prefix', '')).trim();\nif (!prefixRe.test(prefix)) prefix = '';\nvar pad = parseInt(pick('pad', 6), 10);\nif (!isFinite(pad) || pad < 1) pad = 6;\nif (pad > 12) pad = 12;\nreturn [{ json: { sequence_key: key, prefix: prefix, pad: pad, prefix_requested: prefix.length > 0 } }];"
+      },
+      "id": "81f3dfcc-e913-43f9-8bdc-4430ef502b9f",
+      "name": "Read Sequence Request",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1776,
+        1216
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "number_sequences"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sequence_key",
+              "keyValue": "={{ $json.sequence_key }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "d0ad9f97-b266-48e1-81d0-89379ee774e6",
+      "name": "Get Sequence Row",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        2064,
+        1216
+      ],
+      "typeVersion": 1.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "var req = $('Read Sequence Request').first().json;\nvar items = $input.all();\nvar row = (items.length && items[0].json && typeof items[0].json === 'object') ? items[0].json : {};\nvar stored = Number(row.current_value);\nif (!isFinite(stored) || stored < 0) stored = 0;\nstored = Math.floor(stored);\nvar next = stored + 1;\nvar prefix = req.prefix_requested ? req.prefix : (typeof row.prefix === 'string' ? row.prefix : '');\nvar digits = String(next);\nwhile (digits.length < req.pad) { digits = '0' + digits; }\nreturn [{ json: {\n  sequence_key: req.sequence_key,\n  current_value: next,\n  previous_value: stored,\n  prefix: prefix,\n  formatted_number: prefix + digits,\n  updated_at: new Date().toISOString()\n} }];"
+      },
+      "id": "724a92a3-0265-4ccf-a825-1652eaa9aef8",
+      "name": "Compute Next Number",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2320,
+        1216
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "number_sequences"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sequence_key",
+              "keyValue": "={{ $json.sequence_key }}"
+            }
+          ]
+        },
+        "columns": {
+          "value": {
+            "prefix": "={{ $json.prefix }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "sequence_key": "={{ $json.sequence_key }}",
+            "current_value": "={{ $json.current_value }}"
+          },
+          "schema": [
+            {
+              "id": "sequence_key",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "sequence_key",
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_value",
+              "type": "number",
+              "display": true,
+              "required": false,
+              "displayName": "current_value",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prefix",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "prefix",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "updated_at",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "sequence_key"
+          ]
+        },
+        "options": {}
+      },
+      "id": "9a1b2211-cba6-4518-900f-0ca42471d99e",
+      "name": "Save Sequence Counter",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        2624,
+        1216
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"sequence_key\": $(\"Compute Next Number\").item.json.sequence_key, \"number\": $(\"Compute Next Number\").item.json.formatted_number, \"current_value\": $(\"Compute Next Number\").item.json.current_value, \"issued_at\": $(\"Compute Next Number\").item.json.updated_at } }}",
+        "options": {}
+      },
+      "id": "5a4e04bc-f4ed-42bf-85c4-ec8d3975e828",
+      "name": "Return Issued Number",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        2880,
+        1216
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "content": "## Issue gapless sequential invoice and ticket numbers from a Data Table\n\n### How it works\n1. A `POST` webhook at `next-number` accepts a `sequence_key`, plus an optional `prefix` and zero-pad width `pad`.\n2. A Code node validates the request and falls back to safe defaults, so a malformed call still returns a usable number.\n3. The `number_sequences` Data Table is read for that key, then a Code node adds one to `current_value`, starting at 1 when the key has never been used.\n4. The counter is written back with an upsert on `sequence_key`, and Respond to Webhook returns the formatted number, for example `INV-000042`.\n\n",
+        "height": 356,
+        "width": 692
+      },
+      "id": "693cbe19-b0a2-4749-bd91-bf3ff39c2419",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        1056
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Read and validate the request",
+        "height": 312,
+        "width": 480,
+        "color": 7
+      },
+      "id": "60dd8c7b-cacb-47fa-8123-3ed3382a9a29",
+      "name": "Section Read Request",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1472,
+        1104
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Look up and increment\n\nBest effort, not a lock: two genuinely simultaneous calls can read the same `current_value`. Serialise callers for a hard guarantee.",
+        "height": 376,
+        "width": 496,
+        "color": 7
+      },
+      "id": "c0233b5d-162f-46a5-abc1-70ed4bbf5613",
+      "name": "Section Look Up Increment",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Save the counter and respond",
+        "height": 376,
+        "width": 544,
+        "color": 7
+      },
+      "id": "88370b48-8bda-48ce-b0a2-1389172d6ff5",
+      "name": "Section Save And Respond",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2544,
+        1024
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Sequence Row": {
+      "main": [
+        [
+          {
+            "node": "Compute Next Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Next Number": {
+      "main": [
+        [
+          {
+            "node": "Save Sequence Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Sequence Request": {
+      "main": [
+        [
+          {
+            "node": "Get Sequence Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Sequence Counter": {
+      "main": [
+        [
+          {
+            "node": "Return Issued Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Number Is Requested": {
+      "main": [
+        [
+          {
+            "node": "Read Sequence Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8ae1fb5a-a71c-4c7f-8c3e-3f20e6bd19fa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    }
+  ]
+}

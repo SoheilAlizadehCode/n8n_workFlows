@@ -1,0 +1,580 @@
+{
+  "name": "Automated Crypto Coin Crash Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Automated Crypto Coin Crash Tracker\n\n### How it works\n\n1. The workflow triggers on a schedule to monitor digital assets.\n2. Price data is fetched and analyzed against crash thresholds.\n3. Recent market news is retrieved if volatility is detected.\n4. An AI agent synthesizes the price and news data into insights.\n5. A summary is sent to Slack as an alert.\n\n",
+        "height": 288,
+        "width": 480
+      },
+      "id": "5f44057e-d188-4cbf-a48d-6c04dd560606",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Schedule and configuration setup\n\nTriggers the workflow and initializes configuration parameters.",
+        "height": 304,
+        "width": 416,
+        "color": 7
+      },
+      "id": "d43f6220-6db2-45f7-bb35-c058e5087cdd",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1264,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch and analyze price data\n\nAnalyzes metrics to evaluate crash thresholds.",
+        "height": 272,
+        "width": 864,
+        "color": 7
+      },
+      "id": "e5d7c040-a293-49c5-a2aa-e0cbd98c90b8",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1712,
+        -96
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch and extract market news\n\nRetrieves recent news for AI analysis.",
+        "height": 272,
+        "width": 416,
+        "color": 7
+      },
+      "id": "8a42e411-0aeb-47e8-9111-9837840226d1",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2608,
+        -96
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## AI market analyst agent\n\nUses Gemini to formulate market insights.",
+        "height": 512,
+        "width": 352,
+        "color": 7
+      },
+      "id": "4d2de9fa-f3f6-4062-aa4b-922235480bd9",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3056,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Format and send Slack alert\n\nSends formatted notification to Slack channel.",
+        "height": 272,
+        "width": 416,
+        "color": 7
+      },
+      "id": "c578df36-589d-41c3-98ec-9712ab5c57e0",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3440,
+        -96
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      },
+      "id": "87fddd2d-94d5-4f0a-bb71-01cad4b369e5",
+      "name": "Every 4 Hours Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        1312,
+        16
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2a6f090d-4225-4eba-9f2a-4527c3f92ab5",
+              "name": "Asset",
+              "type": "string",
+              "value": "bitcoin"
+            },
+            {
+              "id": "0db3d8b8-35ca-4013-9b83-8eaab24d37ef",
+              "name": "Ticker",
+              "type": "string",
+              "value": "BTC"
+            },
+            {
+              "id": "3a3b9f1f-60ad-4d64-9056-2126bdea2ac6",
+              "name": "Crash_threshold",
+              "type": "string",
+              "value": "65000"
+            },
+            {
+              "id": "8f2c1e3a-1234-4abc-9d56-1a2b3c4d5e6f",
+              "name": "Percent_drop_threshold",
+              "type": "string",
+              "value": "5"
+            },
+            {
+              "id": "9a3d2f4b-2345-4bcd-8e67-2b3c4d5e6f7a",
+              "name": "News_limit",
+              "type": "string",
+              "value": "15"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1c22606-4de0-4b56-ae26-7c54a966b35e",
+      "name": "Set Asset Parameters",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1536,
+        16
+      ],
+      "typeVersion": 3.5
+    },
+    {
+      "parameters": {
+        "url": "=https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids={{ $json.Asset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "c7eaa4a7-68d6-4bd6-999c-3c73ad85bd7f",
+      "name": "Fetch Current Asset Price",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1760,
+        16
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "url": "=https://api.coingecko.com/api/v3/coins/{{ $('Set Asset Parameters').item.json.Asset }}/market_chart",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "vs_currency",
+              "value": "usd"
+            },
+            {
+              "name": "days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e63df6e8-c954-48c3-b20a-50aa3650c572",
+      "name": "Fetch 24h Market Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1984,
+        16
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pull current price + full 24h chart, compute real stats, and decide crash severity.\nconst currentPrice = $('Fetch Current Asset Price').item.json[$('Set Asset Parameters').item.json.Asset].usd;\nconst chart = $input.first().json;\nconst prices = chart.prices;\n\nif (!prices || prices.length === 0) {\n  throw new Error('No price data returned from CoinGecko market_chart endpoint');\n}\n\nconst priceValues = prices.map(p => p[1]);\nconst periodHigh = Math.max(...priceValues);\nconst periodLow = Math.min(...priceValues);\nconst price24hAgo = priceValues[0];\n\nconst percentChange24h = ((currentPrice - price24hAgo) / price24hAgo) * 100;\nconst percentDropFromHigh = ((periodHigh - currentPrice) / periodHigh) * 100;\n\nconst crashThreshold = parseFloat($('Set Asset Parameters').item.json.Crash_threshold);\nconst percentDropThreshold = parseFloat($('Set Asset Parameters').item.json.Percent_drop_threshold);\n\n// Crash if: price fell below the absolute floor, OR it dropped more than X% off its 24h high\nconst isCrash = (currentPrice < crashThreshold) || (percentDropFromHigh >= percentDropThreshold);\n\n// Normal days: downsample to ~24 points so we don't burn tokens sending 288 raw entries to the LLM.\n// Crash days: send the FULL raw series so the LLM can actually see the shape of the move.\nconst toPoint = ([ts, price]) => ({\n  time: new Date(ts).toISOString(),\n  price: Math.round(price * 100) / 100\n});\n\nlet llmPriceData;\nif (isCrash) {\n  llmPriceData = prices.map(toPoint);\n} else {\n  const sampleEvery = Math.max(1, Math.floor(prices.length / 24));\n  llmPriceData = prices.filter((_, idx) => idx % sampleEvery === 0).map(toPoint);\n}\n\nreturn [{\n  json: {\n    asset: $('Set Asset Parameters').item.json.Asset,\n    ticker: $('Set Asset Parameters').item.json.Ticker,\n    current_price: Math.round(currentPrice * 100) / 100,\n    period_high_24h: Math.round(periodHigh * 100) / 100,\n    period_low_24h: Math.round(periodLow * 100) / 100,\n    price_24h_ago: Math.round(price24hAgo * 100) / 100,\n    percent_change_24h: Math.round(percentChange24h * 100) / 100,\n    percent_drop_from_high: Math.round(percentDropFromHigh * 100) / 100,\n    crash_threshold: crashThreshold,\n    percent_drop_threshold: percentDropThreshold,\n    is_crash: isCrash,\n    is_full_data: isCrash,\n    raw_point_count: prices.length,\n    llm_price_data: llmPriceData\n  }\n}];"
+      },
+      "id": "a6a7ade2-8a4c-4ec8-9732-c7fa63bd5189",
+      "name": "Calculate Crash Severity",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2208,
+        16
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "83dfe7bd-e6de-4cbf-8656-2768d3312534",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.is_crash }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "6f2fba93-c979-46ff-a14b-c71b7c0189a5",
+      "name": "If Crash Threshold Met",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2432,
+        16
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-1111-4aaa-9111-111111111111",
+              "name": "slack_message",
+              "type": "string",
+              "value": "=🚨 *{{ $('Calculate Crash Severity').item.json.ticker }} Crash Alert* 🚨\n\n*Current Price:* ${{ $('Calculate Crash Severity').item.json.current_price }}\n*24h Change:* {{ $('Calculate Crash Severity').item.json.percent_change_24h }}%\n*Drop from 24h High:* {{ $('Calculate Crash Severity').item.json.percent_drop_from_high }}%\n*24h Range:* ${{ $('Calculate Crash Severity').item.json.period_low_24h }} - ${{ $('Calculate Crash Severity').item.json.period_high_24h }}\n\n*AI Assessment — {{ $json.output.severity }}*\n{{ $json.output.headline }}\n\n{{ $json.output.summary }}\n\n*Key Drivers:*\n{{ $json.output.key_drivers.map(k => '• ' + k).join('\\n') }}\n\n*Recommendation:* {{ $json.output.recommendation }}\n\n*Top Headlines:*\n{{ $('Extract News Articles').item.json.titles_formatted }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10ba0ad1-9cc0-484c-b16c-701b6bff3d05",
+      "name": "Prepare Slack Message",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3488,
+        16
+      ],
+      "typeVersion": 3.5
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C0B8VH1M5PX",
+          "cachedResultName": "general"
+        },
+        "text": "={{ $json.slack_message }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "81a1f041-6bfd-4195-aefa-84142fd1c16a",
+      "name": "Post Message to Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        3712,
+        16
+      ],
+      "webhookId": "9aa3b07a-76f4-4c14-b632-514c6146ce65",
+      "typeVersion": 2.5
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "ad4a85f0-9077-4bd2-87e2-ca28e76fdfd6",
+      "name": "Google Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        3120,
+        240
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"headline\": { \"type\": \"string\", \"description\": \"One-line summary of what's happening\" },\n    \"severity\": { \"type\": \"string\", \"enum\": [\"watch\", \"moderate\", \"severe\"] },\n    \"summary\": { \"type\": \"string\", \"description\": \"2-3 sentence market summary\" },\n    \"key_drivers\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"description\": \"Top news-driven factors, max 3\" },\n    \"recommendation\": { \"type\": \"string\", \"description\": \"One sentence suggested watch item or action\" }\n  },\n  \"required\": [\"headline\", \"severity\", \"summary\", \"key_drivers\", \"recommendation\"]\n}"
+      },
+      "id": "76eb90c9-dd65-4a51-96e8-784fafbccd31",
+      "name": "Define Output Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        3248,
+        240
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "url": "https://api.marketaux.com/v1/news/all",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbols",
+              "value": "={{ $('Set Asset Parameters').item.json.Ticker }}"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2d6f630-63ea-43b2-b6ba-029d3cd0f17c",
+      "name": "Fetch Market News",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2656,
+        16
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this Bitcoin market move and the related news headlines. Decide whether this is a genuinely significant event worth alerting a trading team about, or just normal volatility.\n\nPRICE DATA:\nCurrent Price: ${{ $('Calculate Crash Severity').item.json.current_price }}\n24h Change: {{ $('Calculate Crash Severity').item.json.percent_change_24h }}%\nDrop from 24h High: {{ $('Calculate Crash Severity').item.json.percent_drop_from_high }}%\n24h Range: ${{ $('Calculate Crash Severity').item.json.period_low_24h }} - ${{ $('Calculate Crash Severity').item.json.period_high_24h }}\nFull tick-level data included: {{ $('Calculate Crash Severity').item.json.is_full_data }}\n\nRECENT NEWS HEADLINES:\n{{ $json.titles_formatted }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a crypto market analyst. Be factual and concise. If the news doesn't clearly explain the price move, say so plainly instead of guessing. Do not exaggerate severity."
+        }
+      },
+      "id": "2efeac0e-5981-4a39-a2dc-f441fd6a8cb9",
+      "name": "Market Analyst Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3104,
+        16
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab the top articles + metadata for the LLM and for the Slack message.\nconst response = $input.first().json;\nconst items = response.data || [];\n\n// Limit to a maximum of 5 posts, or less if specified in Config\nconst configLimit = parseInt($('Set Asset Parameters').item.json.News_limit, 10) || 5;\nconst newsLimit = Math.min(configLimit, 5);\n\nconst articles = items.slice(0, newsLimit).map(article => {\n  // Extract description and truncate to 200 characters\n  let desc = article.description || \"No description available.\";\n\n  if (desc.length > 200) {\n    desc = desc.substring(0, 200) + \"...\";\n  }\n\n  return {\n    title: article.title,\n    description: desc,\n    url: article.url,\n    source: article.source || \"Unknown\",\n    published_at: article.published_at,\n  };\n});\n\n// Format titles and descriptions for the AI prompt\nconst titlesFormatted = articles\n  .map(\n    (a, i) =>\n      `${i + 1}. ${a.title} (${a.source})\\nSummary: ${a.description}`\n  )\n  .join(\"\\n\\n\");\n\nreturn [\n  {\n    json: {\n      articles,\n      article_count: articles.length,\n      titles_formatted:\n        titlesFormatted || \"No recent headlines found.\",\n    },\n  },\n];"
+      },
+      "id": "87a174f9-f6fb-4a44-a4ba-ef43b182b7cd",
+      "name": "Extract News Articles",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2880,
+        16
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fetch Market News": {
+      "main": [
+        [
+          {
+            "node": "Extract News Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Market Analyst Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Output Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Market Analyst Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Market Analyst Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Asset Parameters": {
+      "main": [
+        [
+          {
+            "node": "Fetch Current Asset Price",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 4 Hours Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Asset Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract News Articles": {
+      "main": [
+        [
+          {
+            "node": "Market Analyst Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch 24h Market Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Crash Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Post Message to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Crash Threshold Met": {
+      "main": [
+        [
+          {
+            "node": "Fetch Market News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Crash Severity": {
+      "main": [
+        [
+          {
+            "node": "If Crash Threshold Met",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Current Asset Price": {
+      "main": [
+        [
+          {
+            "node": "Fetch 24h Market Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "91b7d685-44ed-462f-b648-def16a94e1d0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z",
+      "id": "TQQNUlAM8h9e8zRY",
+      "name": "Template"
+    }
+  ]
+}

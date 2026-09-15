@@ -1,0 +1,424 @@
+{
+  "name": "Precision Prospector with Bright Data",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7d28013a-4158-4825-a6aa-4921e8bd0f28",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        128,
+        464
+      ],
+      "webhookId": "22c79cd1-0bd1-4bd1-bde0-88e0b3dcf553",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "id": "8a901a2a-b108-4c0c-812f-d31853948737",
+      "name": "Simple Memory1",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        688,
+        624
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "17ad852d-379e-458c-a853-e7cff65eb9a6",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        128,
+        240
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "description": "Pass the google uri to get first linkedin link from Google Search",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "fjEIEQ1L6n2IKqlx"
+        },
+        "workflowInputs": {
+          "value": {},
+          "schema": [],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "0ce86b20-76d6-445d-b22e-fdd5a54f8a55",
+      "name": "Search LinkedIn URI",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        912,
+        624
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "urls": "={{ $fromAI('URLs') }}",
+        "resource": "webScrapper",
+        "dataset_id": {
+          "__rl": true,
+          "mode": "list",
+          "value": "=gd_l1viktl72bvl7bjuj0"
+        },
+        "descriptionType": "manual",
+        "toolDescription": "Scrape data synchronously by URL in BrightData\nURLs parameter must follow the next format:\n[{\"url\":\"https://www.linkedin.com/in/dvirsharon/\"}]"
+      },
+      "id": "abe1af5b-91bd-4b7e-8e83-64768f8ae752",
+      "name": "Get LinkedIn Profile Data",
+      "type": "n8n-nodes-brightdata.brightDataTool",
+      "position": [
+        1120,
+        624
+      ],
+      "typeVersion": 1,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "4ef50850-cb3b-4107-8700-bfe7dab81748",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        512,
+        624
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "link",
+        "options": {
+          "destinationFieldName": "url"
+        }
+      },
+      "id": "891a2475-980b-495d-869d-bd07d55d9b85",
+      "name": "Extract Links",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1040,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "body",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "link",
+              "cssSelector": "a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true,
+          "cleanUpText": true
+        }
+      },
+      "id": "4af7ec6a-5fac-43d6-b1a7-ef92eadba4f4",
+      "name": "Get Links from Body",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        832,
+        240
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "7ccbfe62-09f0-44d1-aa72-c65a2d1750b2",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $json.url }}",
+              "rightValue": "linkedin.com/"
+            },
+            {
+              "id": "de368fe2-6559-4316-97c5-2c6bb0a72a51",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{ $json.url }}",
+              "rightValue": "https://"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3e8a51af-4399-4987-827d-b897f9950738",
+      "name": "Filter only LinkedIn Profiles",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        1264,
+        240
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {},
+      "id": "4802588c-a444-4752-9f13-fcb81cda5e52",
+      "name": "Limit",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        1488,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are an expert AI Prospector Agent.\nYou return information about any person using LinkedIn profiles.\n\nFollow the next guidelines always:\n\n1) User can ask your for people in two ways:\n- by company and first name\n- by company and position\n- by linkedin company\n\n2) if user searches by company and first, do a google search and scrape links matching request. Sample url generated for this case:\n- if company = bright data\n- fullname = dvir\nThe url generated is\nhttps://www.google.com/search?q=site%3Alinkedin.com%2Fin+bright%20data+dvir\n\nCall \"Search LinkedIn URI\", pass as query property the generated url, and get first https:// linkedin.com link\n\n3) if user searches by company and position, do a google search and scrape links matching request. Sample url generated for this case:\n- if company = bright data\n- position = cmo\nThe url generated is\nhttps://www.google.com/search?q=site%3Alinkedin.com%2Fin+bright%20data+cmo\n\nCall \"Search LinkedIn URI\", pass as query property the generated url, and get first https:// linkedin.com link\n\n4) if user searches by LinkedIn URI, pass link to tool \"Get LinkedIn Profile Data\".\n\n5) Present a summary for all data returned by \"Get LinkedIn Profile Data\" tool\n",
+          "maxIterations": 10
+        }
+      },
+      "id": "abb5f667-d444-4ea7-96e1-1cd8e77cf37a",
+      "name": "AI Prospector Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        608,
+        400
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "content": "# Precision Prospector with Bright Data\n\n",
+        "height": 760,
+        "width": 1680
+      },
+      "id": "4292143c-9b41-4d04-b007-c2717e43b61d",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.query }}&num=1",
+        "zone": {
+          "__rl": true,
+          "mode": "list",
+          "value": "web_unlocker1"
+        },
+        "format": "json",
+        "country": {
+          "__rl": true,
+          "mode": "list",
+          "value": "us"
+        }
+      },
+      "id": "f0a41069-9baa-42eb-8f3b-01318a01d6be",
+      "name": "Get 1 Google Result",
+      "type": "n8n-nodes-brightdata.brightData",
+      "position": [
+        528,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Links": {
+      "main": [
+        [
+          {
+            "node": "Filter only LinkedIn Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Prospector Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Prospector Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get 1 Google Result": {
+      "main": [
+        [
+          {
+            "node": "Get Links from Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Links from Body": {
+      "main": [
+        [
+          {
+            "node": "Extract Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search LinkedIn URI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Prospector Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get LinkedIn Profile Data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Prospector Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Prospector Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter only LinkedIn Profiles": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get 1 Google Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e585e204-16c7-4a27-af67-e62816b60266",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    }
+  ]
+}

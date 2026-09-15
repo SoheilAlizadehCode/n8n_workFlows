@@ -1,0 +1,1879 @@
+{
+  "name": "Customer Payment Reminder Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Customer Payment Reminder Scheduler\n\n### How it works\n\n1. The workflow is triggered daily at 9 AM.\n2. It fetches unpaid invoices from a Microsoft SQL database.\n3. The workflow checks if there are any unpaid invoices to process.\n4. Each unpaid invoice is processed to determine how many days until due and to route reminders accordingly.\n5. Reminder emails are prepared and sent at different stages based on conditions.\n6. Finally, a summary report of all reminders sent is generated and emailed to the finance team.\n\n",
+        "height": 384,
+        "width": 480
+      },
+      "id": "2923af7a-e2a6-4597-b4fa-77650c19c11e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Schedule daily trigger\n\nTrigger the workflow at a set time.",
+        "height": 304,
+        "color": 7
+      },
+      "id": "ab6303b1-d622-4960-8df9-270db29fd7fe",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        864
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch unpaid invoices\n\nRetrieve unpaid invoices from the database.",
+        "height": 304,
+        "color": 7
+      },
+      "id": "cabb0f04-6e60-4c1d-9785-7eb2c2e5f086",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        864
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Check unpaid invoices\n\nDetermine if there are unpaid invoices to process.",
+        "height": 304,
+        "color": 7
+      },
+      "id": "2c9a75bd-8205-4391-be37-7704846c0fab",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        864
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Process each invoice\n\nSplit invoices into batches for processing.",
+        "height": 304,
+        "color": 7
+      },
+      "id": "715a5b02-6100-448a-8020-8936ca4c9788",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        960,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## No invoices to process\n\nHandle cases with no unpaid invoices.",
+        "height": 304,
+        "color": 7
+      },
+      "id": "c10552ac-3465-4b21-abe4-c03492d91978",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        960,
+        1104
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Calculate days until due\n\nCalculate how many days are left until each invoice is due.",
+        "height": 352,
+        "color": 7
+      },
+      "id": "980340cc-1b53-472a-a041-409408494901",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Route to reminder stage\n\nDetermine which stage of reminder to process based on conditions.",
+        "height": 448,
+        "color": 7
+      },
+      "id": "04ee6b00-53bb-45ed-8cb1-a3b7c1ddeddf",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1264,
+        960
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send 7 days before\n\nPrepare and send reminders for invoices due in 7 days.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "994d912d-c678-4cb9-87b8-c44ad660f481",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1488,
+        592
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send 3 days before\n\nPrepare and send reminders for invoices due in 3 days.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "82fc6561-6705-4181-bb1a-2ac6de859020",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        896
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send due today\n\nPrepare and send reminders for invoices due today.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "32f5220e-d038-479c-a98c-d1ec8545fcf1",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        1200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send 1 day overdue\n\nPrepare and send reminders for invoices overdue by 1 day.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "9798a4f2-ddf6-4612-a476-c62593dac1de",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        1504
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send 7 days overdue\n\nPrepare and send reminders for invoices overdue by 7 days.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "1b1cb159-5194-40b0-be23-7dea91ccb5d3",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1536,
+        1808
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Prepare and send 15 days overdue\n\nPrepare and send reminders for invoices overdue by 15 days.",
+        "height": 272,
+        "width": 1088,
+        "color": 7
+      },
+      "id": "4df810c6-0b19-429e-b52c-ad3bd7caec6d",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1488,
+        2112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Merge all stages\n\nMerge all results from reminders into a single output.",
+        "height": 448,
+        "color": 7
+      },
+      "id": "03b279b8-840b-4010-b597-1feeda0b1e5c",
+      "name": "Sticky Note14",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2656,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Generate summary\n\nAggregate and generate a summary of all reminders sent.",
+        "height": 272,
+        "width": 864,
+        "color": 7
+      },
+      "id": "49006742-ed24-4cdf-b9cd-c351a7eeb8a7",
+      "name": "Sticky Note15",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2928,
+        912
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "9ed55275-8435-4f8c-bd03-3d1e29d52b68",
+      "name": "Daily at 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        192,
+        992
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT InvoiceID, CustomerEmail, CustomerName, InvoiceNumber, Amount, DueDate, ReminderStage, LastReminderDate FROM Invoices WHERE PaymentStatus = 'Unpaid' ORDER BY DueDate",
+        "options": {}
+      },
+      "id": "c116274e-dc64-4664-8e3b-43d15a0222e3",
+      "name": "Fetch Unpaid Invoices",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        464,
+        992
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c3c9d74-0531-497b-8a40-9f8d56799dfa",
+      "name": "Has Unpaid Invoices?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        736,
+        992
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "id": "8ee0f85a-f99d-47b4-9ae9-7a56ac48d13b",
+      "name": "Merge All Stages",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2704,
+        960
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "getTimeBetweenDates",
+        "startDate": "={{ $now.toISO() }}",
+        "endDate": "={{ $json.DueDate }}",
+        "options": {}
+      },
+      "id": "3634cfeb-cfc0-4cc0-8e7a-2f4d2e9500d5",
+      "name": "Calculate Days Until Due",
+      "type": "n8n-nodes-base.dateTime",
+      "position": [
+        1088,
+        576
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "fcf160a0-0ffb-4ead-b1e4-aa64ef2f41b8",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": 7
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "7 Days Before"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "9f002c8d-f890-4974-9565-129a97f17960",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": 3
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "3 Days Before"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "53e15a97-fc0f-4cc6-a4e6-e4c75e8d0ca7",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": 0
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Due Today"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "6c7dbf9b-027c-4b1e-a8d2-a7303094ebb9",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": -1
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "1 Day Overdue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "d8afcebf-29bf-41e1-a90b-e0b10fc8ba78",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": -7
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "7 Days Overdue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "786ba84a-0b3b-4842-b2be-8db9d2a2c05f",
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.day }}",
+                    "rightValue": -15
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "15 Days Overdue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "259cd7d5-e881-42f0-bd01-fb0a4a2c4fe6",
+      "name": "Route to Reminder Stage",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1312,
+        1120
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "73053db0-fcc0-4c19-ab57-2933ed8b418f",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": ""
+            },
+            {
+              "id": "7f8091bf-fb05-4ce9-990c-8b190200295f",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "7_DAYS_BEFORE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d944f46e-48e3-47c0-a716-d77f1140ecc2",
+      "name": "Already Sent 7 Before?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1536,
+        704
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "7_DAYS_BEFORE"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=Reminder: Invoice {{ $json.InvoiceNumber }} due in 7 days"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nThis is a friendly reminder that invoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is due on {{ $json.DueDate }}.\n\nPlease ensure payment is made by the due date.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ebac7322-f3b5-40a1-b79e-92450dacb258",
+      "name": "Prepare Email 7 Before",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1760,
+        704
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "93aa4cf8-9c6e-4c29-8571-3f3e88ed474b",
+      "name": "Send Email 7 Before",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1984,
+        704
+      ],
+      "webhookId": "ec6d3006-987a-4cdc-913e-90eb82b17eec",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email 7 Before\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email 7 Before\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "b65143e9-b4e6-4729-b10a-699c12ce203f",
+      "name": "Update DB 7 Before",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2208,
+        704
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email 7 Before\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email 7 Before\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "3dd014e5-fbbf-4868-9bdd-1f603c446d1d",
+      "name": "Log Audit 7 Before",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2432,
+        704
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "bc35deff-b765-4b77-bf9b-df680e742fe4",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "3_DAYS_BEFORE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7d84309-e936-4f51-9dd0-3baa4ce2610a",
+      "name": "Already Sent 3 Before?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1584,
+        1008
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "3_DAYS_BEFORE"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=Reminder: Invoice {{ $json.InvoiceNumber }} due in 3 days"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nInvoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is due in 3 days ({{ $json.DueDate }}).\n\nPlease arrange payment soon.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7cd31af0-6794-4368-8315-04b20212e1d0",
+      "name": "Prepare Email 3 Before",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1808,
+        1008
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "aed82b2b-7ab7-4cc6-900d-1908ca14005a",
+      "name": "Send Email 3 Before",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2032,
+        1008
+      ],
+      "webhookId": "e91e2cf2-0339-437c-a41d-f5db04903ede",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email 3 Before\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email 3 Before\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "9fe80321-502f-4cff-b1de-78b652a90956",
+      "name": "Update DB 3 Before",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2256,
+        1008
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email 3 Before\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email 3 Before\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "fe877b53-d0d2-40aa-bc95-7e0fbc530428",
+      "name": "Log Audit 3 Before",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2480,
+        1008
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "DUE_TODAY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "29ddf5e7-87e2-4d71-bb9b-01f20eaf073e",
+      "name": "Already Sent Due Today?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1584,
+        1312
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "DUE_TODAY"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=Payment Due Today: Invoice {{ $json.InvoiceNumber }}"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nInvoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is due TODAY ({{ $json.DueDate }}).\n\nPlease submit payment immediately to avoid late fees.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "fe7c1304-38ef-4708-b22d-f936c5f05895",
+      "name": "Prepare Email Due Today",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1808,
+        1312
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "e038e4b3-c2e3-4c91-b089-4974d282a18a",
+      "name": "Send Email Due Today",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2032,
+        1312
+      ],
+      "webhookId": "361dc2ef-d610-443a-942c-a02770072ec8",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email Due Today\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email Due Today\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "454eaa35-576f-48e2-b6a1-9660cac5221e",
+      "name": "Update DB Due Today",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2256,
+        1312
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email Due Today\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email Due Today\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "18896ec2-0521-47cf-9416-5e04cd52378a",
+      "name": "Log Audit Due Today",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2480,
+        1312
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "1_DAY_OVERDUE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "caf8bfab-8ef8-49f4-b060-568f58827d81",
+      "name": "Already Sent 1 Overdue?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1584,
+        1616
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "1_DAY_OVERDUE"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=OVERDUE: Invoice {{ $json.InvoiceNumber }} - Payment Required"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nInvoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is now 1 day overdue (due date: {{ $json.DueDate }}).\n\nPlease submit payment immediately to avoid additional late fees.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "27bd0d6c-2012-47f6-a14a-6e83e1a19a9b",
+      "name": "Prepare Email 1 Overdue",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1808,
+        1616
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "1c768c7a-ad22-4a1a-b1b1-9729fbc8f46c",
+      "name": "Send Email 1 Overdue",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2032,
+        1616
+      ],
+      "webhookId": "4c706d75-8787-4e4a-b284-1c4dfe1e8f34",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email 1 Overdue\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email 1 Overdue\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "dfe068ed-5a69-4bfb-8873-41edca3900fc",
+      "name": "Update DB 1 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2256,
+        1616
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email 1 Overdue\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email 1 Overdue\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "dc4a963a-753e-4406-9655-2dc2a755dfac",
+      "name": "Log Audit 1 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2480,
+        1616
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "7_DAYS_OVERDUE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0b07c7b6-cc9e-45bb-be41-657143398406",
+      "name": "Already Sent 7 Overdue?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1584,
+        1920
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "7_DAYS_OVERDUE"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=URGENT: Invoice {{ $json.InvoiceNumber }} - 7 Days Overdue"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nInvoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is now 7 days overdue (due date: {{ $json.DueDate }}).\n\nImmediate payment is required. Please contact us if there are any issues.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "22780c26-8a5c-40bd-b296-00e17aae8ba2",
+      "name": "Prepare Email 7 Overdue",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1808,
+        1920
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "5a96df21-2dc9-40c1-9f52-656a657039a2",
+      "name": "Send Email 7 Overdue",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2032,
+        1920
+      ],
+      "webhookId": "1f3b05b7-58ba-4a73-b750-9d45d5799116",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email 7 Overdue\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email 7 Overdue\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "a34e2fcb-c60c-47ee-9ebf-2dd157dcdaf5",
+      "name": "Update DB 7 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2256,
+        1920
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email 7 Overdue\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email 7 Overdue\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "ba3f5ff2-7a06-40a9-9a62-1a07c34fc3d8",
+      "name": "Log Audit 7 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2480,
+        1920
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.ReminderStage }}",
+              "rightValue": "15_DAYS_OVERDUE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d267ae0-0704-4380-9b2c-3f4f750dd0d8",
+      "name": "Already Sent 15 Overdue?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1536,
+        2224
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stage",
+              "name": "stage",
+              "type": "string",
+              "value": "15_DAYS_OVERDUE"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=FINAL NOTICE: Invoice {{ $json.InvoiceNumber }} - 15 Days Overdue"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "=Dear {{ $json.CustomerName }},\n\nThis is a FINAL NOTICE. Invoice {{ $json.InvoiceNumber }} for ${{ $json.Amount }} is now 15 days overdue (due date: {{ $json.DueDate }}).\n\nPayment must be received immediately or your account may be sent to collections.\n\nThank you!"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "9f68baae-6b7a-4a18-aa07-853676d15d01",
+      "name": "Prepare Email 15 Overdue",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1760,
+        2224
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.CustomerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "8347b43f-85c6-4c66-82f2-93574d9ab14d",
+      "name": "Send Email 15 Overdue",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1984,
+        2224
+      ],
+      "webhookId": "314bf3d2-bfb5-4fda-80ef-8d83cac5fcfc",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE Invoices SET ReminderStage = '{{ $(\"Prepare Email 15 Overdue\").item.json.stage }}', LastReminderDate = '{{ $now.toFormat(\"yyyy-MM-dd\") }}' WHERE InvoiceID = {{ $(\"Prepare Email 15 Overdue\").item.json.InvoiceID }}",
+        "options": {}
+      },
+      "id": "d17571ba-d82e-4f10-b02b-b9f40b7eecb7",
+      "name": "Update DB 15 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2208,
+        2224
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO AuditLog (InvoiceID, Action, ReminderStage, Timestamp) VALUES ({{ $(\"Prepare Email 15 Overdue\").item.json.InvoiceID }}, 'REMINDER_SENT', '{{ $(\"Prepare Email 15 Overdue\").item.json.stage }}', '{{ $now.toISO() }}')",
+        "options": {}
+      },
+      "id": "e71fe76d-63a3-4bd3-ab3a-7553114f4354",
+      "name": "Log Audit 15 Overdue",
+      "type": "n8n-nodes-base.microsoftSql",
+      "position": [
+        2432,
+        2224
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "8985061c-9b5f-4da1-9b7b-c5607be3c5f3",
+      "name": "Process Each Invoice",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1008,
+        896
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "No unpaid invoices found"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7180f1c-70ee-4216-b74f-2a44bcd360a0",
+      "name": "No Invoices to Process",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1008,
+        1232
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "processedInvoices",
+        "options": {}
+      },
+      "id": "2fda5f17-9daa-4c4b-a727-65de67051c12",
+      "name": "Aggregate Summary",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        2976,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "totalProcessed",
+              "name": "totalProcessed",
+              "type": "number",
+              "value": "={{ $json.processedInvoices.length }}"
+            },
+            {
+              "id": "reportDate",
+              "name": "reportDate",
+              "type": "string",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd\") }}"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=Payment Reminder Summary - {{ $now.toFormat(\"MMMM d, yyyy\") }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b58422db-a892-4200-9c9f-01e9e13c83d2",
+      "name": "Generate Summary Report",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3200,
+        1024
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "html": "<html>\n<head><style>body { font-family: Arial, sans-serif; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #4CAF50; color: white; }</style></head>\n<body>\n<h2>Payment Reminder Summary - {{ $json.reportDate }}</h2>\n<p><strong>Total Invoices Processed:</strong> {{ $json.totalProcessed }}</p>\n<table>\n<tr><th>Invoice ID</th><th>Reminder Stage</th></tr>\n{{ $json.processedInvoices.map(inv => \"<tr><td>\" + inv.InvoiceID + \"</td><td>\" + inv.stage + \"</td></tr>\").join(\"\") }}\n</table>\n</body>\n</html>"
+      },
+      "id": "b7af47c4-a3bb-499e-992d-6627f5cdac0c",
+      "name": "Create HTML Report",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        3424,
+        1024
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "sendTo": "user@example.com",
+        "subject": "={{ $(\"Generate Summary Report\").item.json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "87b13763-2fdc-48fe-a740-88566586e8bf",
+      "name": "Send Summary to Finance",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        3648,
+        1024
+      ],
+      "webhookId": "6ed60a12-4659-4304-9a1e-fbe4cdac17f1",
+      "typeVersion": 2.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily at 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unpaid Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Stages": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Summary": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create HTML Report": {
+      "main": [
+        [
+          {
+            "node": "Send Summary to Finance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Audit 3 Before": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Log Audit 7 Before": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB 3 Before": {
+      "main": [
+        [
+          {
+            "node": "Log Audit 3 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB 7 Before": {
+      "main": [
+        [
+          {
+            "node": "Log Audit 7 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Audit 1 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Log Audit 7 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Log Audit Due Today": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Send Email 3 Before": {
+      "main": [
+        [
+          {
+            "node": "Update DB 3 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email 7 Before": {
+      "main": [
+        [
+          {
+            "node": "Update DB 7 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB 1 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Log Audit 1 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB 7 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Log Audit 7 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB Due Today": {
+      "main": [
+        [
+          {
+            "node": "Log Audit Due Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Unpaid Invoices?": {
+      "main": [
+        [
+          {
+            "node": "Process Each Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Invoices to Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Audit 15 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Process Each Invoice": {
+      "main": [
+        [
+          {
+            "node": "Merge All Stages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate Days Until Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email 1 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Update DB 1 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email 7 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Update DB 7 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Due Today": {
+      "main": [
+        [
+          {
+            "node": "Update DB Due Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB 15 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Log Audit 15 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unpaid Invoices": {
+      "main": [
+        [
+          {
+            "node": "Has Unpaid Invoices?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email 15 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Update DB 15 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent 3 Before?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email 3 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent 7 Before?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email 7 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email 3 Before": {
+      "main": [
+        [
+          {
+            "node": "Send Email 3 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email 7 Before": {
+      "main": [
+        [
+          {
+            "node": "Send Email 7 Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent 1 Overdue?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email 1 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent 7 Overdue?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email 7 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent Due Today?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Due Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary Report": {
+      "main": [
+        [
+          {
+            "node": "Create HTML Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email 1 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Send Email 1 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email 7 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Send Email 7 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Due Today": {
+      "main": [
+        [
+          {
+            "node": "Send Email Due Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Reminder Stage": {
+      "main": [
+        [
+          {
+            "node": "Already Sent 7 Before?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Process Each Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent 3 Before?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent Due Today?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent 1 Overdue?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent 7 Overdue?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent 15 Overdue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Sent 15 Overdue?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email 15 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Days Until Due": {
+      "main": [
+        [
+          {
+            "node": "Route to Reminder Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email 15 Overdue": {
+      "main": [
+        [
+          {
+            "node": "Send Email 15 Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "68d21b53-81a5-41d7-88a0-2acdd24d1e5c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "058cbf97c805354cbc1987a47489f15000399c52f3d2aeb086dc346147d1e5ac"
+  },
+  "nodeGroups": [],
+  "id": "RKV3DQHfBupmRSkY",
+  "tags": [
+    {
+      "updatedAt": "2026-09-15T16:22:24.624Z",
+      "createdAt": "2026-09-15T16:22:24.624Z",
+      "id": "01J19IAeCMbwcFBQ",
+      "name": "trello"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:24.584Z",
+      "createdAt": "2026-09-15T16:22:24.584Z",
+      "id": "08TQIJECNM5nFlxk",
+      "name": "template"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.427Z",
+      "createdAt": "2026-09-15T16:22:51.427Z",
+      "id": "0y1Hf8rzEwvQm8I0",
+      "name": "google-sheet"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.377Z",
+      "createdAt": "2026-09-15T16:22:51.377Z",
+      "id": "JRX3XUy2jjAWmFjQ",
+      "name": "shopify"
+    },
+    {
+      "updatedAt": "2026-09-15T16:22:51.405Z",
+      "createdAt": "2026-09-15T16:22:51.405Z",
+      "id": "SNNwZxvHOLrlx751",
+      "name": "gsheet"
+    },
+    {
+      "name": "Template",
+      "id": "TQQNUlAM8h9e8zRY",
+      "updatedAt": "2026-09-15T17:11:28.436Z",
+      "createdAt": "2026-09-15T17:11:28.436Z"
+    }
+  ]
+}
